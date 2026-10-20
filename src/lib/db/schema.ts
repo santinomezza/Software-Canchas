@@ -209,8 +209,19 @@ CREATE TABLE IF NOT EXISTS complex_services (
 CREATE INDEX IF NOT EXISTS idx_services_complex ON complex_services(complex_id, position);
 `;
 
+/**
+ * v6 — primera versión del bloque del bot.
+ *
+ * Las migraciones son inmutables una vez publicadas: si se edita una que ya
+ * corrió, el guard de `user_version` la saltea en silencio. Por eso este
+ * bloque queda congelado y el esquema real del bot vive en la v7.
+ */
 export const MIGRATION_6 = `
--- v6 — bot de WhatsApp: ciclo de vida de la reserva, sesiones, clientes,
+DROP TABLE IF EXISTS bot_sessions;
+`;
+
+export const MIGRATION_7 = `
+-- v7 — bot de WhatsApp: ciclo de vida de la reserva, sesiones, clientes,
 -- staff, pagos, bitácoras y cola de trabajos.
 
 -- Estados del ciclo de vida de una reserva.
@@ -341,6 +352,7 @@ export const MIGRATIONS: { version: number; sql: string }[] = [
   { version: 4, sql: MIGRATION_4 },
   { version: 5, sql: MIGRATION_5 },
   { version: 6, sql: MIGRATION_6 },
+  { version: 7, sql: MIGRATION_7 },
 ];
 
 /** Estados en los que un turno ocupa la cancha. */
