@@ -1,0 +1,69 @@
+﻿
+> software-canchas@0.1.0 build
+> next build
+
+▲ Next.js 16.4.2 (Turbopack)
+✓ Running next.config.ts took 207ms
+
+  Creating an optimized production build ...
+✓ Compiled successfully in 2.2s
+  Running TypeScript ...
+  Finished TypeScript in 5.0s ...
+  Collecting page data using 11 workers ...
+node.exe : (node:18120) ExperimentalWarning: SQLite is an experimental feature and might change at any time
+En línea: 1 Carácter: 1
++ & "C:\Program Files\nodejs/node.exe" "C:\Program Files\nodejs/node_mo ...
++ ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+    + CategoryInfo          : NotSpecified: ((node:18120) Ex...nge at any time:String) [], RemoteException
+    + FullyQualifiedErrorId : NativeCommandError
+ 
+(Use `node --trace-warnings ...` to show where the warning was created)
+(node:6612) ExperimentalWarning: SQLite is an experimental feature and might change at any time
+(Use `node --trace-warnings ...` to show where the warning was created)
+(node:13132) ExperimentalWarning: SQLite is an experimental feature and might change at any time
+(Use `node --trace-warnings ...` to show where the warning was created)
+(node:20008) ExperimentalWarning: SQLite is an experimental feature and might change at any time
+(Use `node --trace-warnings ...` to show where the warning was created)
+(node:6472) ExperimentalWarning: SQLite is an experimental feature and might change at any time
+(Use `node --trace-warnings ...` to show where the warning was created)
+(node:16108) ExperimentalWarning: SQLite is an experimental feature and might change at any time
+(Use `node --trace-warnings ...` to show where the warning was created)
+(node:17464) ExperimentalWarning: SQLite is an experimental feature and might change at any time
+(Use `node --trace-warnings ...` to show where the warning was created)
+(node:5284) ExperimentalWarning: SQLite is an experimental feature and might change at any time
+(Use `node --trace-warnings ...` to show where the warning was created)
+  Generating static pages using 11 workers (0/69) ...
+
+<--- Last few GCs --->
+
+[17464:000002657E700000]     4317 ms: Scavenge 54.2 (73.3) -> 45.5 (104.8) MB, pooled: 0 MB, 58.32 / 0.00 ms  (average 
+mu = 0.998, current mu = 0.998) task; 
+
+FATAL ERROR: NewSpace::EnsureCurrentCapacity Allocation failed - JavaScript heap out of memory
+----- Native stack trace -----
+
+ 1: 00007FF64E8F97FF node::OnFatalError+1343
+ 2: 00007FF64F53DA77 v8::Function::NewInstance+423
+ 3: 00007FF64F33E327 v8::base::AddressSpaceReservation::AddressSpaceReservation+322071
+ 4: 00007FF64F2FEDC3 v8::base::AddressSpaceReservation::AddressSpaceReservation+62643
+ 5: 00007FF64F34072A v8::base::AddressSpaceReservation::AddressSpaceReservation+331290
+ 6: 00007FF64F33FD56 v8::base::AddressSpaceReservation::AddressSpaceReservation+328774
+ 7: 00007FF64F350CE2 v8::internal::StrongRootAllocatorBase::deallocate_impl+15858
+ 8: 00007FF64F35080B v8::internal::StrongRootAllocatorBase::deallocate_impl+14619
+ 9: 00007FF6507B89AD v8::base::UnsignedDivisionByConstant<unsigned __int64>+2791325
+10: 00007FF64F33BDF0 v8::base::AddressSpaceReservation::AddressSpaceReservation+312544
+11: 00007FF64F334F54 v8::base::AddressSpaceReservation::AddressSpaceReservation+284228
+12: 00007FF64E84B72A node::GetNodeReport+98346
+13: 00007FF64E849F10 node::GetNodeReport+92176
+14: 00007FF64F5A545B uv_run+1867
+15: 00007FF64F5A4FCF uv_run+703
+16: 00007FF64EA07A2F node::DecodeWrite+367
+17: 00007FF64E886D52 node::MultiIsolatePlatform::DisposeIsolate+240898
+18: 00007FF64E953A0C node::Start+1052
+19: 00007FF64F96C302 AES_cbc_encrypt+2546
+20: 00007FF6507C20B4 v8::base::UnsignedDivisionByConstant<unsigned __int64>+2829988
+21: 00007FFFD371CDF7 
+22: 00007FFFD4A9EE4C 
+⚠ metadataBase property in metadata export is not set for resolving social open graph or twitter images, using 
+"http://localhost:3000". See https://nextjs.org/docs/app/api-reference/functions/generate-metadata#metadatabase
+⨯ Next.js build worker exited with code: 134 and signal: null

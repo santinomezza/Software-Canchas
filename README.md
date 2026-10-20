@@ -51,10 +51,13 @@ Todas son opcionales — ver `.env.example` para el detalle.
 /es-MX /es-CL /es-CO /pt-BR   Variantes regionales
 /registro              Crear cuenta
 /acceder               Iniciar sesión
-/panel                 Dashboard del complejo
+/panel                 Dashboard: próximos turnos y KPIs
+/panel/agenda          Agenda de turnos (columnas = canchas) + vista por cancha
 /panel/canchas         CRUD de canchas
 /panel/horarios        Horarios de atención
 /panel/reservas        Reservas y cancelaciones
+/panel/caja            Reporte de caja con totales por medio de pago
+/panel/empleados       Equipo, roles y permisos
 /panel/configuracion   Datos del complejo y reglas
 /c/[slug]              Página pública de reservas del complejo
 /privacidad            Políticas de privacidad
@@ -96,8 +99,9 @@ src/
   design-system/        tokens.ts (fuente de verdad) + tokens.json
   i18n/                 routing, request, navigation
   lib/
-    db/                 schema, conexión y repositorios
-    auth.ts             scrypt + sesiones en cookie
+    db/                 schema + migraciones, conexión y repositorios
+    auth.ts             scrypt + sesiones en cookie + guardas de permiso
+    permissions.ts      matriz de roles y permisos
     scheduling.ts       motor de horarios, solapamiento y cancelación (puro)
     payments/           seam de Mercado Pago
 ```
@@ -108,17 +112,25 @@ src/
   binarios y un solo archivo. En producción se puede migrar a Postgres
   reemplazando `src/lib/db/index.ts` — el resto del código habla con el
   repositorio, no con SQL.
+- **Migraciones versionadas** con `PRAGMA user_version`: el esquema evoluciona
+  en sitio sin perder datos (v2 agregó equipo, libro de caja y los campos de
+  edición manual de los turnos).
 - **Dinero en centavos** (`INTEGER`). Nunca floats.
 - **Horarios como `(date, start_min)`** en la zona horaria del complejo: la
   aritmética de slots no depende del servidor ni de DST.
 - **Doble control de disponibilidad**: la reserva se re-valida dentro de una
   transacción `BEGIN IMMEDIATE`, así que dos visitantes no pueden tomar el
   mismo horario.
+- **Permisos por rol, aplicados en el servidor**: `src/lib/permissions.ts`
+  define la matriz; cada server action pide un permiso explícito con
+  `requireMemberAction`. Ocultar un botón nunca alcanza para proteger un dato.
 - **Reveals con CSS, no con framer-motion**: `IntersectionObserver` + transiciones
   CSS garantizan que el contenido se vea siempre con `prefers-reduced-motion` y
   también sin JavaScript.
 - **Pago en sandbox explícito**: sin `MERCADO_PAGO_ACCESS_TOKEN` la reserva se
   aprueba pero la UI dice que no se cobró nada. Nunca se simula un cobro real.
+- **`experimental.cpus: 2`**: el build lanza un worker por CPU y en máquinas
+  con poca memoria eso agota el heap. Ajustá el valor según el equipo.
 
 ---
 
@@ -142,13 +154,32 @@ Guía completa: [`docs/DESIGN-SYSTEM.md`](docs/DESIGN-SYSTEM.md).
 
 ```bash
 npm test                    # 19 unit tests (scheduling + auth)
-npm run qa:e2e              # flujo completo: alta → complejo → cancha → reserva
+npm run qa:e2e              # flujo de onboarding: alta → complejo → cancha → reserva
+node scripts/qa/e2e-panel.mjs   # agenda, edición de turno, caja y equipo
 npm run qa:capture          # capturas en 3 viewports + conteo de errores de consola
+node scripts/qa/lighthouse.mjs  # Lighthouse + axe-core
 ```
 
-El E2E usa Playwright contra el servidor ya levantado. Cubre: registro, alta
-del complejo, carga de canchas, horarios, página pública, reserva y su
-aparición en el panel.
+Los E2E usan Playwright contra el servidor ya levantado.
+
+| Suite | Pasos | Cubre |
+|---|---|---|
+| `qa/e2e.mjs` | 10 | registro, complejo, canchas, horarios, página pública, reserva, conflicto de horario |
+| `qa/e2e-panel.mjs` | 8 | agenda, alta y edición de un turno, reporte de caja, movimiento manual, alta de empleado, permisos del rol |
+
+## Roles
+
+| Rol | Puede |
+|---|---|
+| **Dueño** | Todo, incluida la facturación y el equipo |
+| **Administrador** | Opera el complejo completo, menos la propiedad de la cuenta |
+| **Encargado** | Crea y edita turnos, canchas y horarios. No ve la caja |
+| **Bar** | Carga consumos y movimientos de caja. Ve los turnos |
+| **Sólo lectura** | Consulta el panel sin modificar nada |
+
+Los permisos se aplican en el servidor (`src/lib/permissions.ts`): una URL de
+panel sin permiso redirige al dashboard con un aviso, y una server action sin
+permiso falla.
 
 ---
 

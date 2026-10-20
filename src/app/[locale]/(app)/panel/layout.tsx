@@ -1,6 +1,6 @@
 import { setRequestLocale } from "next-intl/server";
-import { requireUser } from "@/lib/auth";
-import { getComplexForUser } from "@/lib/db/repo";
+import { getSessionUser } from "@/lib/auth";
+import { getComplexForMember } from "@/lib/db/repo";
 import { PanelShell } from "@/components/app/panel-shell";
 import { signOutAction } from "@/app/[locale]/actions/panel";
 
@@ -10,12 +10,14 @@ export default async function PanelLayout({ children, params }: PageParams & { c
   const { locale } = await params;
   setRequestLocale(locale);
 
-  const user = await requireUser("/panel");
-  const complex = getComplexForUser(user.id);
+  // The layout never redirects: each page resolves its own permissions so
+  // that deep links keep the `next` parameter intact.
+  const user = await getSessionUser();
+  const complex = user ? getComplexForMember(user.id) : undefined;
 
   return (
     <PanelShell
-      userName={user.name}
+      userName={user?.name ?? ""}
       publicPath={complex ? `/c/${complex.slug}` : undefined}
       signOut={signOutAction}
     >

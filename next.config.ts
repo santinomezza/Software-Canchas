@@ -6,6 +6,11 @@ const withNextIntl = createNextIntlPlugin("./src/i18n/request.ts");
 const nextConfig: NextConfig = {
   reactStrictMode: true,
   poweredByHeader: false,
+  experimental: {
+    // The build spawns one worker per CPU; on small machines that exhausts the
+    // heap (Next derives the per-worker limit from the free memory).
+    cpus: 2,
+  },
   turbopack: {
     rules: {
       "*.css": {

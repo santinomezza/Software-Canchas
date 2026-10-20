@@ -1,13 +1,16 @@
 /**
- * Database schema.
+ * Database schema and migrations.
  *
  * Money is always stored in cents (INTEGER) — never floats.
  * Time slots are stored as (date, start_min) where start_min is minutes from
  * midnight in the complex' local timezone, which keeps slot maths simple and
  * immune to timezone drift.
+ *
+ * Migrations are applied in order and tracked with SQLite's `user_version`.
+ * Never edit a shipped migration: add a new one.
  */
 
-export const SCHEMA = `
+export const MIGRATION_1 = `
 CREATE TABLE IF NOT EXISTS users (
   id            INTEGER PRIMARY KEY AUTOINCREMENT,
   email         TEXT NOT NULL UNIQUE,
@@ -88,6 +91,61 @@ CREATE INDEX IF NOT EXISTS idx_bookings_date
   ON bookings(complex_id, date);
 `;
 
+/**
+ * v2 — agenda, caja y equipo.
+ *
+ * - `members`: empleados del complejo con su rol.
+ * - `cash_movements`: libro de caja (ingresos, egresos y devoluciones).
+ * - `bookings`: columnas nuevas para edición manual completa y trazabilidad.
+ */
+export const MIGRATION_2 = `
+ALTER TABLE bookings ADD COLUMN user_id INTEGER REFERENCES users(id) ON DELETE SET NULL;
+ALTER TABLE bookings ADD COLUMN concept TEXT NOT NULL DEFAULT 'Cobra Turno';
+ALTER TABLE bookings ADD COLUMN cancelled_at TEXT;
+ALTER TABLE bookings ADD COLUMN cancellation_reason TEXT;
+ALTER TABLE bookings ADD COLUMN refund_cents INTEGER NOT NULL DEFAULT 0;
+ALTER TABLE bookings ADD COLUMN updated_at TEXT;
+
+CREATE INDEX IF NOT EXISTS idx_bookings_user ON bookings(user_id);
+
+CREATE TABLE IF NOT EXISTS members (
+  id         INTEGER PRIMARY KEY AUTOINCREMENT,
+  complex_id INTEGER NOT NULL REFERENCES complexes(id) ON DELETE CASCADE,
+  user_id    INTEGER NOT NULL REFERENCES users(id) ON DELETE CASCADE,
+  role       TEXT NOT NULL DEFAULT 'encargado',
+  phone      TEXT,
+  active     INTEGER NOT NULL DEFAULT 1,
+  created_at TEXT NOT NULL DEFAULT (datetime('now')),
+  UNIQUE (complex_id, user_id)
+);
+CREATE INDEX IF NOT EXISTS idx_members_complex ON members(complex_id);
+
+CREATE TABLE IF NOT EXISTS cash_movements (
+  id              INTEGER PRIMARY KEY AUTOINCREMENT,
+  complex_id      INTEGER NOT NULL REFERENCES complexes(id) ON DELETE CASCADE,
+  booking_id      INTEGER REFERENCES bookings(id) ON DELETE SET NULL,
+  concept         TEXT NOT NULL,
+  player_name     TEXT,
+  user_id         INTEGER REFERENCES users(id) ON DELETE SET NULL,
+  court_id        INTEGER REFERENCES courts(id) ON DELETE SET NULL,
+  booking_date    TEXT,
+  movement_date   TEXT NOT NULL,
+  payment_method  TEXT NOT NULL DEFAULT 'efectivo',
+  amount_cents    INTEGER NOT NULL DEFAULT 0,
+  direction       TEXT NOT NULL DEFAULT 'in',
+  notes           TEXT,
+  created_at      TEXT NOT NULL DEFAULT (datetime('now'))
+);
+CREATE INDEX IF NOT EXISTS idx_cash_complex_date
+  ON cash_movements(complex_id, movement_date);
+CREATE INDEX IF NOT EXISTS idx_cash_booking ON cash_movements(booking_id);
+`;
+
+export const MIGRATIONS: { version: number; sql: string }[] = [
+  { version: 1, sql: MIGRATION_1 },
+  { version: 2, sql: MIGRATION_2 },
+];
+
 export type UserRow = {
   id: number;
   email: string;
@@ -150,4 +208,50 @@ export type BookingRow = {
   external_ref: string | null;
   notes: string | null;
   created_at: string;
+  user_id?: number | null;
+  concept?: string | null;
+  cancelled_at?: string | null;
+  cancellation_reason?: string | null;
+  refund_cents?: number | null;
+  updated_at?: string | null;
 };
+
+export type MemberRow = {
+  id: number;
+  complex_id: number;
+  user_id: number;
+  role: MemberRole;
+  phone: string | null;
+  active: number;
+  created_at: string;
+};
+
+export type MemberRole = "owner" | "admin" | "encargado" | "bar" | "lectura";
+
+export type CashMovementRow = {
+  id: number;
+  complex_id: number;
+  booking_id: number | null;
+  concept: string;
+  player_name: string | null;
+  user_id: number | null;
+  court_id: number | null;
+  booking_date: string | null;
+  movement_date: string;
+  payment_method: string;
+  amount_cents: number;
+  direction: "in" | "out";
+  notes: string | null;
+  created_at: string;
+};
+
+export const PAYMENT_METHODS = [
+  { value: "mercado_pago", label: "Mercado Pago" },
+  { value: "efectivo", label: "Efectivo" },
+  { value: "debito", label: "Débito" },
+  { value: "credito", label: "Crédito" },
+  { value: "transferencia", label: "Transferencia" },
+  { value: "cheques", label: "Cheques" },
+] as const;
+
+export type PaymentMethod = (typeof PAYMENT_METHODS)[number]["value"];

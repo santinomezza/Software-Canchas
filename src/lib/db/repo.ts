@@ -1,8 +1,11 @@
 import { all, insert, one, run, transaction } from "./index";
 import type {
   BookingRow,
+  CashMovementRow,
   ComplexRow,
   CourtRow,
+  MemberRole,
+  MemberRow,
   OpeningHourRow,
   UserRow,
 } from "./schema";
@@ -99,6 +102,23 @@ export function getComplexBySlug(slug: string): ComplexRow | undefined {
 export function getComplexForUser(userId: number): ComplexRow | undefined {
   return one<ComplexRow>(
     "SELECT * FROM complexes WHERE user_id = ? ORDER BY id ASC LIMIT 1",
+    userId,
+  );
+}
+
+/**
+ * The complex a user works in: the one they own, or the one they were added
+ * to as an employee.
+ */
+export function getComplexForMember(userId: number): ComplexRow | undefined {
+  return one<ComplexRow>(
+    `SELECT c.* FROM complexes c WHERE c.user_id = ?
+     UNION
+     SELECT c.* FROM complexes c
+     JOIN members m ON m.complex_id = c.id
+     WHERE m.user_id = ? AND m.active = 1
+     LIMIT 1`,
+    userId,
     userId,
   );
 }
@@ -306,4 +326,240 @@ export function updateBookingPayment(
   if (entries.length === 0) return;
   const sets = entries.map(([key]) => `${key} = ?`).join(", ");
   run(`UPDATE bookings SET ${sets} WHERE id = ?`, ...entries.map(([, value]) => value), id);
+}
+
+/* -------------------------------------------------------------- bookings v2 */
+
+/** Full manual edit of a booking. */
+export function updateBooking(
+  id: number,
+  input: Partial<
+    Pick<
+      BookingRow,
+      | "court_id"
+      | "date"
+      | "start_min"
+      | "duration_min"
+      | "player_name"
+      | "player_email"
+      | "player_phone"
+      | "amount_cents"
+      | "deposit_cents"
+      | "status"
+      | "payment_status"
+      | "payment_method"
+      | "concept"
+      | "notes"
+    >
+  >,
+): void {
+  const entries = Object.entries(input).filter(([, value]) => value !== undefined);
+  if (entries.length === 0) return;
+  const sets = entries.map(([key]) => `${key} = ?`).join(", ");
+  run(
+    `UPDATE bookings SET ${sets}, updated_at = datetime('now') WHERE id = ?`,
+    ...entries.map(([, value]) => value),
+    id,
+  );
+}
+
+export function markBookingCancelled(
+  id: number,
+  input: {
+    cancelled_at: string;
+    cancellation_reason?: string | null;
+    refund_cents?: number;
+    payment_status?: BookingRow["payment_status"];
+  },
+): void {
+  run(
+    `UPDATE bookings
+     SET status = 'cancelled', cancelled_at = ?, cancellation_reason = ?,
+         refund_cents = ?, payment_status = ?, updated_at = datetime('now')
+     WHERE id = ?`,
+    input.cancelled_at,
+    input.cancellation_reason ?? null,
+    input.refund_cents ?? 0,
+    input.payment_status ?? "cancelled",
+    id,
+  );
+}
+
+/** All bookings of a complex within a date range, ordered chronologically. */
+export function listBookingsInRange(
+  complexId: number,
+  from: string,
+  to: string,
+): BookingRow[] {
+  return all<BookingRow>(
+    `SELECT * FROM bookings
+     WHERE complex_id = ? AND date >= ? AND date <= ?
+     ORDER BY date ASC, start_min ASC, id ASC`,
+    complexId,
+    from,
+    to,
+  );
+}
+
+/* ------------------------------------------------------------------ members */
+
+export type MemberWithUser = MemberRow & {
+  user_name: string;
+  user_email: string;
+};
+
+export function listMembers(complexId: number): MemberWithUser[] {
+  return all<MemberWithUser>(
+    `SELECT m.*, u.name AS user_name, u.email AS user_email
+     FROM members m JOIN users u ON u.id = m.user_id
+     WHERE m.complex_id = ?
+     ORDER BY m.active DESC, u.name COLLATE NOCASE`,
+    complexId,
+  );
+}
+
+export function getMember(complexId: number, userId: number): MemberRow | undefined {
+  return one<MemberRow>(
+    "SELECT * FROM members WHERE complex_id = ? AND user_id = ?",
+    complexId,
+    userId,
+  );
+}
+
+export function getMemberById(
+  complexId: number,
+  memberId: number,
+): MemberRow | undefined {
+  return one<MemberRow>(
+    "SELECT * FROM members WHERE id = ? AND complex_id = ?",
+    memberId,
+    complexId,
+  );
+}
+
+export function getMemberByEmail(complexId: number, email: string): MemberRow | undefined {
+  return one<MemberRow>(
+    `SELECT m.* FROM members m JOIN users u ON u.id = m.user_id
+     WHERE m.complex_id = ? AND u.email = ?`,
+    complexId,
+    email.toLowerCase(),
+  );
+}
+
+export function addMember(
+  complexId: number,
+  input: { userId: number; role: MemberRole; phone?: string | null },
+): MemberRow {
+  const id = insert(
+    "INSERT INTO members (complex_id, user_id, role, phone) VALUES (?, ?, ?, ?)",
+    complexId,
+    input.userId,
+    input.role,
+    input.phone ?? null,
+  );
+  return one<MemberRow>("SELECT * FROM members WHERE id = ?", id)!;
+}
+
+export function updateMember(
+  id: number,
+  input: { role?: MemberRole; phone?: string | null; active?: number },
+): void {
+  const entries = Object.entries(input).filter(([, value]) => value !== undefined);
+  if (entries.length === 0) return;
+  const sets = entries.map(([key]) => `${key} = ?`).join(", ");
+  run(`UPDATE members SET ${sets} WHERE id = ?`, ...entries.map(([, value]) => value), id);
+}
+
+export function removeMember(id: number): void {
+  run("DELETE FROM members WHERE id = ?", id);
+}
+
+/* ----------------------------------------------------------- cash movements */
+
+export type CashMovementWithNames = CashMovementRow & {
+  user_name: string | null;
+  court_name: string | null;
+};
+
+export function listCashMovements(
+  complexId: number,
+  options?: { from?: string; to?: string; method?: string },
+): CashMovementWithNames[] {
+  const clauses = ["m.complex_id = ?"];
+  const params: unknown[] = [complexId];
+
+  if (options?.from) {
+    clauses.push("m.movement_date >= ?");
+    params.push(options.from);
+  }
+  if (options?.to) {
+    clauses.push("m.movement_date <= ?");
+    params.push(options.to);
+  }
+  if (options?.method) {
+    clauses.push("m.payment_method = ?");
+    params.push(options.method);
+  }
+
+  return all<CashMovementWithNames>(
+    `SELECT m.*, u.name AS user_name, c.name AS court_name
+     FROM cash_movements m
+     LEFT JOIN users u ON u.id = m.user_id
+     LEFT JOIN courts c ON c.id = m.court_id
+     WHERE ${clauses.join(" AND ")}
+     ORDER BY m.movement_date DESC, m.id DESC`,
+    ...params,
+  );
+}
+
+export function createCashMovement(input: {
+  complexId: number;
+  bookingId?: number | null;
+  concept: string;
+  playerName?: string | null;
+  userId?: number | null;
+  courtId?: number | null;
+  bookingDate?: string | null;
+  movementDate: string;
+  paymentMethod: string;
+  amountCents: number;
+  direction: "in" | "out";
+  notes?: string | null;
+}): number {
+  return insert(
+    `INSERT INTO cash_movements
+      (complex_id, booking_id, concept, player_name, user_id, court_id,
+       booking_date, movement_date, payment_method, amount_cents, direction, notes)
+     VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)`,
+    input.complexId,
+    input.bookingId ?? null,
+    input.concept,
+    input.playerName ?? null,
+    input.userId ?? null,
+    input.courtId ?? null,
+    input.bookingDate ?? null,
+    input.movementDate,
+    input.paymentMethod,
+    input.amountCents,
+    input.direction,
+    input.notes ?? null,
+  );
+}
+
+export function deleteCashMovement(id: number, complexId: number): void {
+  run("DELETE FROM cash_movements WHERE id = ? AND complex_id = ?", id, complexId);
+}
+
+/** Removes every cash movement linked to a booking (used when re-syncing). */
+export function deleteCashMovementsForBooking(bookingId: number): void {
+  run("DELETE FROM cash_movements WHERE booking_id = ?", bookingId);
+}
+
+export function countCashMovementsForBooking(bookingId: number): number {
+  return (
+    one<{ n: number }>(
+      "SELECT COUNT(*) AS n FROM cash_movements WHERE booking_id = ?",
+      bookingId,
+    )?.n ?? 0
+  );
 }

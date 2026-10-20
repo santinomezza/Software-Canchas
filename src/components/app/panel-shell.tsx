@@ -7,6 +7,8 @@ import {
   LayoutGrid,
   LogOut,
   Settings,
+  Users,
+  Wallet,
 } from "lucide-react";
 import { useTranslations } from "next-intl";
 import Link from "next/link";
@@ -18,9 +20,12 @@ import { cn } from "@/lib/utils";
 
 const NAV = [
   { key: "navPanel", href: "/panel", Icon: LayoutGrid },
-  { key: "navBookings", href: "/panel/reservas", Icon: CalendarDays },
+  { key: "navAgenda", href: "/panel/agenda", Icon: CalendarDays },
+  { key: "navBookings", href: "/panel/reservas", Icon: CalendarClock },
   { key: "navCourts", href: "/panel/canchas", Icon: CalendarClock },
   { key: "navHours", href: "/panel/horarios", Icon: CalendarClock },
+  { key: "navCash", href: "/panel/caja", Icon: Wallet },
+  { key: "navTeam", href: "/panel/empleados", Icon: Users },
   { key: "navSettings", href: "/panel/configuracion", Icon: Settings },
 ] as const;
 

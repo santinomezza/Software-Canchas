@@ -52,6 +52,10 @@ Reglas ejecutadas: `wcag2a`, `wcag2aa`, `wcag21a`, `wcag21aa`, `wcag22aa`.
 | `listitem` | `<li>` fuera de su `<ul>` | Mismo fix que el anterior |
 | `canonical` (SEO) | `hreflang` relativos contra `canonical` absoluto | Todos los alternates usan URLs absolutas de `siteConfig.url` |
 | `errors-in-console` (BP) | El proxy de i18n interceptaba `/icon` y `/opengraph-image` (404) | Rutas de metadata excluidas del `matcher` del proxy |
+| `aria-input-field-name` | El pulgar del slider sin nombre accesible | Prop `thumbLabel` en `Slider` |
+| `list` / `listitem` | `<li>` fuera de su `<ul>` en la sección de reservas | `Reveal` con `as="li"` |
+| HTML nesting | `<input hidden>` dentro de `<select>` en el selector de rol | Input movido fuera del `<select>` |
+| Números de formulario | `min={1}` con `step={100}` rechazaba $4.500 | `min={0}` para que el paso sea múltiplo de 100 |
 
 ---
 
@@ -98,9 +102,9 @@ src/lib/scheduling.test.ts   15  (slots, solapamiento, seña, cancelación, slug
 src/lib/auth.test.ts          4  (hash scrypt, verificación, normalización)
 ```
 
-### End-to-end (Playwright) — 10 pasos
+### End-to-end (Playwright) — 18 pasos en 2 suites
 
-`scripts/qa/e2e.mjs` cubre el flujo completo contra un servidor levantado:
+`scripts/qa/e2e.mjs` — flujo de onboarding contra un servidor levantado:
 
 ```
 PASS  signup page renders
@@ -116,6 +120,25 @@ PASS  screenshot of the panel
 
 console errors: 0
 ```
+
+`scripts/qa/e2e-panel.mjs` — agenda, caja y equipo:
+
+```
+PASS  owner signs up and sets up the complex
+PASS  agenda renders the grid with the court column
+PASS  booking is created from an empty slot
+PASS  booking is fully editable from the agenda
+PASS  cash report lists the movement and totals
+PASS  manual cash movement is registered
+PASS  employee is added with a temporary password
+PASS  employee signs in and sees a read-only agenda
+
+console errors: 0
+```
+
+La última suite verifica además que un empleado con rol *encargado* **no**
+pueda entrar a la sección de equipo: el permiso se aplica en el servidor, no
+ocultando el botón.
 
 ### Capturas responsive — 0 errores de consola
 

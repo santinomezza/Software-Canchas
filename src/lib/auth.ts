@@ -6,9 +6,12 @@ import {
   deleteSession,
   findSessionUser,
   findUserByEmail,
+  getComplexForMember,
+  getMember,
   purgeExpiredSessions,
 } from "@/lib/db/repo";
-import type { UserRow } from "@/lib/db/schema";
+import type { ComplexRow, UserRow } from "@/lib/db/schema";
+import { can, type Permission, type Role } from "@/lib/permissions";
 
 const SESSION_COOKIE = "cancha_session";
 const SESSION_DAYS = 30;
@@ -73,6 +76,68 @@ export async function requireUser(returnTo = "/panel"): Promise<UserRow> {
   const user = await getSessionUser();
   if (!user) redirect(`/registro?next=${encodeURIComponent(returnTo)}`);
   return user;
+}
+
+/* ------------------------------------------------------- roles y permisos */
+
+/** The role a user has on a complex: owner, or the role they were given. */
+export function roleFor(complex: ComplexRow, userId: number): Role | undefined {
+  if (complex.user_id === userId) return "owner";
+  const member = getMember(complex.id, userId);
+  if (!member || !member.active) return undefined;
+  return member.role;
+}
+
+export type MemberContext = {
+  user: UserRow;
+  complex: ComplexRow;
+  role: Role;
+};
+
+export class PermissionError extends Error {
+  constructor(permission: Permission) {
+    super(`No tenés permiso para esta acción (${permission}).`);
+    this.name = "PermissionError";
+  }
+}
+
+async function resolveMember(permission: Permission, returnTo: string) {
+  const user = await requireUser(returnTo);
+  const complex = getComplexForMember(user.id);
+
+  if (!complex) redirect("/panel");
+  if (!complex) throw new Error("Complejo no encontrado.");
+
+  const role = roleFor(complex, user.id);
+  if (!role) redirect("/panel");
+  if (!role) throw new Error("Sin rol asignado.");
+
+  return { user, complex, role };
+}
+
+/**
+ * Guard for pages: a missing permission sends the visitor back to the
+ * dashboard with an explanation instead of failing the render.
+ */
+export async function requireMember(
+  permission: Permission,
+  returnTo = "/panel",
+): Promise<MemberContext> {
+  const context = await resolveMember(permission, returnTo);
+  if (!can(context.role, permission)) redirect("/panel?permiso=denegado");
+  return context;
+}
+
+/**
+ * Guard for server actions: a missing permission fails the action.
+ */
+export async function requireMemberAction(
+  permission: Permission,
+  returnTo = "/panel",
+): Promise<MemberContext> {
+  const context = await resolveMember(permission, returnTo);
+  if (!can(context.role, permission)) throw new PermissionError(permission);
+  return context;
 }
 
 /* ------------------------------------------------------------------- misc */

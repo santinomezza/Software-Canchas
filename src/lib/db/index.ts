@@ -1,13 +1,16 @@
 import { DatabaseSync } from "node:sqlite";
 import fs from "node:fs";
 import path from "node:path";
-import { SCHEMA } from "./schema";
+import { MIGRATIONS } from "./schema";
 
 /**
  * SQLite connection built on Node's native `node:sqlite` driver.
  *
  * Using the built-in avoids native compilation (no prebuilds, no node-gyp) and
  * keeps the dependency tree free of a database binary.
+ *
+ * Schema changes are applied through numbered migrations tracked with
+ * SQLite's `user_version`, so an existing database upgrades in place.
  */
 
 const DB_PATH =
@@ -17,13 +20,25 @@ declare global {
   var __canchaDb: DatabaseSync | undefined;
 }
 
+function migrate(db: DatabaseSync) {
+  const current = db.prepare("PRAGMA user_version").get() as { user_version: number };
+  let version = current?.user_version ?? 0;
+
+  for (const migration of MIGRATIONS) {
+    if (migration.version <= version) continue;
+    db.exec(migration.sql);
+    db.exec(`PRAGMA user_version = ${migration.version}`);
+    version = migration.version;
+  }
+}
+
 function connect(): DatabaseSync {
   fs.mkdirSync(path.dirname(DB_PATH), { recursive: true });
   const database = new DatabaseSync(DB_PATH);
   database.exec("PRAGMA journal_mode = WAL;");
   database.exec("PRAGMA foreign_keys = ON;");
   database.exec("PRAGMA busy_timeout = 5000;");
-  database.exec(SCHEMA);
+  migrate(database);
   return database;
 }
 
