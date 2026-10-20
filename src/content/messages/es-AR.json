@@ -1,0 +1,323 @@
+{
+  "meta": {
+    "title": "Cómo funciona | Software de gestión para complejos deportivos",
+    "titleTemplate": "%s | cancha",
+    "description": "Tu complejo con sitio propio, reservas 24/7 garantizadas con Mercado Pago, caja, stock y estadísticas en vivo. Probá 1 mes gratis.",
+    "ogTitle": "Tu complejo deportivo, abierto 24/7",
+    "ogDescription": "Sitio web propio, reservas garantizadas, pagos con Mercado Pago, caja y stock en un solo panel."
+  },
+  "nav": {
+    "skipToContent": "Ir al contenido principal",
+    "product": "Producto",
+    "features": "Funciones",
+    "pricing": "Precios",
+    "contact": "Contacto",
+    "cta": "Probá gratis 1 mes",
+    "menu": "Abrir menú",
+    "close": "Cerrar menú",
+    "country": "País",
+    "countryAria": "Elegir país y región",
+    "brandAria": "Página principal de cancha"
+  },
+  "hero": {
+    "eyebrow": "Software de gestión para complejos deportivos",
+    "h1A": "Tu complejo, abierto 24/7",
+    "h1B": "Reservas que entran solas",
+    "subtitle": "Publicamos un sitio propio con tu marca, cobramos la seña en el momento y dejamos la caja, el stock y las estadísticas en un solo panel. Tus clientes reservan; vos gestionás.",
+    "ctaPrimary": "Probá gratis 1 mes",
+    "ctaSecondary": "Ver demo en video",
+    "proof": "+[DATO_REAL] complejos ya reservan en línea con nosotros",
+    "proofNote": "Datos verificados con referencias de clientes",
+    "scrollHint": "Descubrí cómo funciona",
+    "mockupAlt": "Panel de reservas del complejo con una reserva confirmada y un pago aprobado",
+    "floatingBooking": "Reserva confirmada",
+    "floatingBookingMeta": "Cancha 3 · 19:00 hs · Pagada",
+    "floatingPayment": "Pago aprobado",
+    "floatingPaymentMeta": "Seña $ 18.000 · Mercado Pago"
+  },
+  "trust": {
+    "title": "Conectado con las herramientas que ya usás",
+    "subtitle": "Las reservas entran por donde tu cliente ya está: el buscador, el chat o la red social.",
+    "countriesLabel": "Disponible en 14 países de América"
+  },
+  "reservas": {
+    "eyebrow": "Sitio web propio + respuestas automáticas",
+    "h1": "Un sitio con tu marca que reserva solo",
+    "lead": "Cada complejo recibe un sitio propio con disponibilidad real, horarios y precios. El jugador elige cancha, elige horario y paga: la reserva queda confirmada en menos de un minuto, a cualquier hora del día.",
+    "benefit1Title": "Reservas en menos de 1 minuto",
+    "benefit1Body": "Tres pantallas: cancha, horario y pago. Sin registros eternos ni formularios de 12 campos.",
+    "benefit2Title": "Sin depender de llamados",
+    "benefit2Body": "El turno se vende a las 3 de la mañana igual que a las 11 de la mañana. No se pierde más una reserva por falta de respuesta.",
+    "benefit3Title": "WhatsApp, redes y Google en automático",
+    "benefit3Body": "Las consultas que llegan por chat, Instagram o el perfil de Google se responden con disponibilidad real y enlace de reserva. Si preguntan fuera de horario, el turno queda tomado igual.",
+    "phoneAria": "Flujo de reserva en el teléfono",
+    "step1": "Elegí cancha",
+    "step1Body": "Disponibilidad real por día y horario",
+    "step2": "Elegí horario",
+    "step2Body": "Turnos de 60, 90 o 120 minutos",
+    "step3": "Pagá la seña",
+    "step3Body": "Confirmación inmediata con Mercado Pago",
+    "stepDots": "Pasos del flujo de reserva",
+    "inboundTitle": "También entra por el chat",
+    "inboundBody": "Si el cliente escribe en vez de reservar, el bot le ofrece horarios, registra la consulta y deja el link a un clic."
+  },
+  "pagos": {
+    "eyebrow": "Integración con Mercado Pago",
+    "h1": "Cada reserva, pagada y garantizada",
+    "lead": "Definís el porcentaje de seña por cancha y la regla de cancelación que quieras. Mercado Pago procesa el pago en el momento: la reserva entra confirmada sola y la devolución se ejecuta con la regla que vos elegiste.",
+    "sliderLabel": "Anticipación con la que cancela el cliente",
+    "sliderHint": "Mové el control para ver qué pasa con la seña",
+    "sliderNow": "Cancela con",
+    "sliderNowValue": "{hours} h de anticipación",
+    "refundTitle": "Se devuelve el 100% de la seña",
+    "refundBody": "El cliente cancela con más de 24 horas de anticipación, así que la seña vuelve a su tarjeta en forma automática.",
+    "retainTitle": "La seña queda en tu complejo",
+    "retainBody": "Con menos de 24 horas de anticipación la seña se retiene y el horario queda liberado para que lo venderas de nuevo.",
+    "amountLabel": "Seña de la cancha 3",
+    "amountValue": "$ 18.000",
+    "policyTitle": "Reglas que definís vos",
+    "policy1": "Porcentaje de seña por cancha",
+    "policy2": "Ventana de devolución automática",
+    "policy3": "Bloqueo de horarios y preventa",
+    "guaranteeLabel": "Reservas confirmadas con pago",
+    "guaranteeValue": "100%",
+    "methodsLabel": "Métodos de pago",
+    "balanceLabel": "Saldo pendiente en la cancha",
+    "balanceValue": "Se paga al llegar",
+    "cta": "Probarlo con mis reglas"
+  },
+  "panel": {
+    "eyebrow": "Software online multiusuario",
+    "h1": "Administrá el complejo desde donde estés",
+    "lead": "Reservas, consumos de bar, roles de usuario y resolución de superposiciones en un panel online que funciona en cualquier dispositivo y con varias personas trabajando al mismo tiempo.",
+    "gridAria": "Grilla de turnos por cancha y horario",
+    "gridHint": "Arrastrá un turno a otra franja para ver la detección de superposición",
+    "court1": "Cancha 1",
+    "court2": "Cancha 2",
+    "court3": "Cancha 3",
+    "booking": "Reserva",
+    "conflictTitle": "Superposición detectada",
+    "conflictBody": "Este horario ya está ocupado en Cancha 2 a las 19:00. Revisá antes de guardar el cambio.",
+    "conflictCta": "Revisar horarios",
+    "resolvedTitle": "Turno movido sin conflictos",
+    "resolvedBody": "El turno quedó en Cancha 3 a las 20:00 y el equipo lo ve actualizado al instante.",
+    "feature1Title": "Roles y permisos",
+    "feature1Body": "Administrador, encargado de turno y bar con permisos distintos.",
+    "feature2Title": "Multiusuario en vivo",
+    "feature2Body": "Cada cambio se refleja al instante en todos los dispositivos del equipo.",
+    "feature3Title": "Consumos de bar",
+    "feature3Body": "Pedidos cargados al turno y cobrados en el mismo lugar."
+  },
+  "caja": {
+    "eyebrow": "Caja y stock",
+    "h1": "Cada peso y cada stock, anotados",
+    "lead": "Un cierre de caja diario con todos los movimientos, y el inventario actualizado en el momento en que consumís o repesás.",
+    "cashTitle": "Caja del día",
+    "cashBody": "Entradas, señas, consumos y retiros, con responsable y hora.",
+    "stockTitle": "Stock en tiempo real",
+    "stockBody": "Stock de bar y insumos con alerta de stock bajo.",
+    "barTitle": "Consumos de bar",
+    "barBody": "Pedidos asociados al turno y cobrados en caja.",
+    "auditTitle": "Cierre con responsable",
+    "auditBody": "Cada diferencia queda registrada con quién la hizo y cuándo.",
+    "kpiCash": "En caja hoy",
+    "kpiStock": "Stock bajo",
+    "kpiSales": "Ventas de hoy",
+    "tableAria": "Movimientos de caja del día",
+    "colMovement": "Movimiento",
+    "colMethod": "Medio",
+    "colUser": "Responsable",
+    "colAmount": "Monto",
+    "row1": "Seña · Cancha 3 · 19:00",
+    "row2": "Consumo · Bar · 3 bebidas",
+    "row3": "Reserva · Cancha 1 · 11:00",
+    "methodCard": "Mercado Pago",
+    "methodCash": "Efectivo",
+    "methodTransfer": "Transferencia",
+    "user1": "Mariana",
+    "user2": "Julián",
+    "user3": "Sistema"
+  },
+  "estadisticas": {
+    "eyebrow": "Estadísticas en tiempo real",
+    "h1": "Decidí con números, no con intuición",
+    "lead": "Ocupación, ingresos y horarios pico actualizados en vivo. Con eso definís qué cancha ampliar, qué hora subir de precio y qué turno dejar abierto.",
+    "kpi1Label": "Ocupación semanal",
+    "kpi2Label": "Ingresos del mes",
+    "kpi3Label": "Reserva promedio",
+    "kpi4Label": "Horarios pico",
+    "chart1Title": "Ocupación por hora",
+    "chart1Sub": "Promedio de las últimas 4 semanas",
+    "chart2Title": "Ingresos por día",
+    "chart2Sub": "Últimos 7 días",
+    "chart3Title": "Ingresos por cancha",
+    "chart3Sub": "Participación del mes",
+    "hours": ["10", "12", "14", "16", "18", "20", "22"],
+    "occupancy": [38, 52, 44, 71, 96, 88, 61],
+    "days": ["Lun", "Mar", "Mié", "Jue", "Vie", "Sáb", "Dom"],
+    "revenue": [42, 55, 48, 66, 88, 100, 74],
+    "courts": ["Cancha 1", "Cancha 2", "Cancha 3", "Cancha 4"],
+    "courtShare": [38, 27, 22, 13],
+    "sampleNote": "Datos de ejemplo para mostrar el formato. Los números reales de tu complejo aparecen al conectar el panel.",
+    "metricOccupancy": "{value}%",
+    "metricRevenue": "$ {value}k",
+    "metricAverage": "$ {value}",
+    "metricPeak": "{value} hs"
+  },
+  "roadmap": {
+    "eyebrow": "Próximamente",
+    "h1": "Lo que viene, en la cancha",
+    "lead": "Estamos construyendo las piezas que faltan para que el complejo funcione solo, incluso la organización de los jugadores.",
+    "notifyTitle": "Avisame cuando salga",
+    "notifyBody": "Dejanos tu email y te escribimos el día que esté disponible.",
+    "notifyCta": "Anotarme",
+    "notifyDone": "¡Listo! Te avisamos el día que salga.",
+    "notifyEmailLabel": "Tu email",
+    "statusInDev": "En desarrollo",
+    "statusBeta": "En beta privada",
+    "statusPlanned": "Planificado",
+    "items": [
+      {
+        "title": "Armado de partidos y “Falta 1”",
+        "body": "Matchmaking por nivel y disponibilidad: los jugadores que buscan grupo encuentran uno sin que vos organices nada."
+      },
+      {
+        "title": "Inscripción a torneos",
+        "body": "Creador de torneos, cobro de inscripciones y lista de participantes en un solo lugar."
+      },
+      {
+        "title": "Gestión de clases y actividades",
+        "body": "Talleres, academias y clases con cupos, asistencia y cobro por período."
+      },
+      {
+        "title": "API de WhatsApp",
+        "body": "Conectá tus propios flujos y automatizaciones sobre la conversación del club."
+      }
+    ]
+  },
+  "video": {
+    "eyebrow": "Demo del producto",
+    "h1": "Mirá el panel funcionando",
+    "lead": "Recorrido real por el panel: crear una reserva, cobrarla, moverla en la grilla y cerrar la caja.",
+    "play": "Reproducir la demo",
+    "loading": "Cargando la demo…",
+    "duration": "3:24",
+    "posterAlt": "Vista previa del panel de gestión con la grilla de turnos",
+    "transcript": "Ver la transcripción de la demo",
+    "transcriptText": "La demo muestra cuatro recorridos: alta de canchas y horarios, reserva online con seña cobrada por Mercado Pago, arrastre de turnos en la grilla con aviso de superposición y cierre de caja con stock actualizado."
+  },
+  "steps": {
+    "eyebrow": "Cómo empezar",
+    "h1": "De cero a recibir reservas en un día",
+    "lead": "No hace falta que migres nada. Empezás cargando tus canchas y en la misma jornada ya podés recibir la primera reserva.",
+    "step1Title": "Registrate y creá tu complejo",
+    "step1Body": "Datos básicos, Logo y horarios. Tardás unos minutos.",
+    "step2Title": "Cargá canchas y horarios",
+    "step2Body": "Precios, duración de turno y reglas de seña por cancha.",
+    "step3Title": "Recibí tu primera reserva",
+    "step3Body": "Compartís tu link y las reservas entran solas, pagadas y confirmadas.",
+    "timeLabel": " Tiempo estimado: {value}",
+    "time1": "5 minutos",
+    "time2": "15 minutos",
+    "time3": "Desde el primer día"
+  },
+  "faq": {
+    "eyebrow": "Preguntas frecuentes",
+    "h1": "Todo lo que suelen preguntarnos",
+    "lead": "Si te falta algo, escribinos y te lo respondemos en el día.",
+    "contactCta": "Hacer otra pregunta",
+    "items": [
+      {
+        "q": "¿Necesito tener mi propia página web?",
+        "a": "No. Publicamos un sitio propio para tu complejo con tu logo, tus colores, tus canchas y tus precios. Podés usar el dominio que ya tengas o el que te damos con el plan."
+      },
+      {
+        "q": "¿Qué pasa si un cliente cancela?",
+        "a": "El sistema aplica la regla que definiste para esa cancha: con más de 24 horas de anticipación la seña se devuelve de forma automática; con menos de 24 horas queda retenida y el horario vuelve a quedar disponible para venderlo de nuevo."
+      },
+      {
+        "q": "¿Necesito tener cuenta en Mercado Pago?",
+        "a": "Sí, es el medio de pago que usamos para cobrar las señas. La integración es guiada: te ayudamos a vincular tu cuenta y a verificar los datos una sola vez."
+      },
+      {
+        "q": "¿Puedo usar el panel desde el celular?",
+        "a": "Sí. El panel es online y está optimizado para celular y tablet. Podés entrar a ver la grilla de turnos o cerrar la caja desde la cancha, sin volver a la oficina."
+      },
+      {
+        "q": "¿Cuántas personas pueden trabajar al mismo tiempo?",
+        "a": "Las que quieras. El panel es multiusuario: cada persona entra con su propio rol y todo lo que cambia se refleja al instante en los demás dispositivos."
+      },
+      {
+        "q": "¿El mes gratis tiene condiciones?",
+        "a": "El período de prueba no tiene costo ni compromiso de permanencia. Al final te mostramos el detalle y decidís si querés continuar; los datos y la configuración se conservan."
+      },
+      {
+        "q": "¿Qué pasa con los datos que ya tengo cargados?",
+        "a": "Podés migrarlos con asistencia durante la puesta en marcha. También podés empezar manualmente: la carga de canchas y horarios toma unos minutos por complejo."
+      }
+    ]
+  },
+  "cta": {
+    "eyebrow": "Empezá hoy",
+    "h1": "Probá el sistema con tu complejo",
+    "lead": "Un mes completo, sin tarjeta y sin compromiso. Te ayudamos a poner en marcha tus canchas el mismo día.",
+    "formTitle": "Crear mi prueba gratis",
+    "name": "Nombre del complejo",
+    "namePlaceholder": "Complejo Los Sauces",
+    "email": "Email",
+    "emailPlaceholder": "hola@complejo.com",
+    "phone": "WhatsApp",
+    "phonePlaceholder": "+54 9 11 0000 0000",
+    "courts": "Cantidad de canchas",
+    "courtsPlaceholder": "Elegí una opción",
+    "courts1": "1 a 3 canchas",
+    "courts2": "4 a 8 canchas",
+    "courts3": "Más de 8 canchas",
+    "submit": "Empezar mi prueba gratis",
+    "submitting": "Enviando…",
+    "successTitle": "¡Listo, ya arrancamos!",
+    "successBody": "Te escribimos al email para coordinar la puesta en marcha. Mientras tanto, tu espacio ya quedó reservado.",
+    "successCta": "Volver al inicio",
+    "errorTitle": "No pudimos enviar el formulario",
+    "errorBody": "Revisá los datos o escribinos directo por email. Te respondemos en el día.",
+    "privacy": "Usamos tus datos solo para contactarte por esta prueba. Sin spam.",
+    "alternatives": "¿Preferís hablar con alguien? Escribinos por email o WhatsApp."
+  },
+  "footer": {
+    "product": "Producto",
+    "company": "Empresa",
+    "legal": "Legal",
+    "downloadTitle": "Reservá al instante",
+    "downloadBody": "Descargá la app y tené tus turnos a mano.",
+    "appStore": "App Store",
+    "playStore": "Google Play",
+    "privacy": "Políticas de privacidad",
+    "terms": "Términos y condiciones",
+    "cookies": "Cookies",
+    "countryTitle": "Elegí tu país",
+    "countryBody": "El precio y la moneda se ajustan a tu mercado.",
+    "rights": "Todos los derechos reservados.",
+    "madeIn": "Hecho para complejos de pádel, fútbol y tenis en América."
+  },
+  "common": {
+    "demo": "Ver demo",
+    "learnMore": "Saber más",
+    "soon": "Próximamente",
+    "new": "Nuevo",
+    "beta": "Beta",
+    "ariaLoading": "Cargando",
+    "ariaScrollTop": "Volver arriba"
+  },
+  "theme": {
+    "label": "Cambiar tema",
+    "light": "Modo claro",
+    "dark": "Modo oscuro"
+  },
+  "cookies": {
+    "title": "Cookies",
+    "body": "Usamos cookies analíticas para entender cómo se usa el sitio. Podés aceptarlas o seguir navegando sin ellas.",
+    "accept": "Aceptar",
+    "reject": "Solo esenciales",
+    "more": "Ver política de privacidad"
+  }
+}

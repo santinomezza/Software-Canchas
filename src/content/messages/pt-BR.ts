@@ -1,0 +1,363 @@
+import type { Messages } from "./_transform";
+
+/**
+ * Brasil — full translation (not derived): sports vocabulary differs enough
+ * ("quadra", "sinal", "estoque", "fechamento de caixa") that a rule-based
+ * derivation would read wrong.
+ */
+const messages: Messages = {
+  meta: {
+    title: "Como funciona | Software de gestão para complejos esportivos",
+    titleTemplate: "%s | cancha",
+    description:
+      "Seu complexo com site próprio, reservas 24/7 garantidas via Mercado Pago, caixa, estoque e estatísticas em tempo real. Teste 1 mês grátis.",
+    ogTitle: "Seu complexo esportivo, aberto 24 horas",
+    ogDescription:
+      "Site próprio, reservas garantidas, pagamento via Mercado Pago, caixa e estoque em um único painel.",
+  },
+  nav: {
+    skipToContent: "Ir para o conteúdo principal",
+    product: "Produto",
+    features: "Funcionalidades",
+    pricing: "Preços",
+    contact: "Contato",
+    cta: "Teste grátis 1 mês",
+    menu: "Abrir menu",
+    close: "Fechar menu",
+    country: "País",
+    countryAria: "Escolher país e região",
+    brandAria: "Página inicial da cancha",
+  },
+  hero: {
+    eyebrow: "Software de gestão para complexos esportivos",
+    h1A: "Seu complexo, aberto 24 horas",
+    h1B: "Reservas que entram sozinhas",
+    subtitle:
+      "Publicamos um site próprio com a sua marca, cobramos o sinal na hora e deixamos caixa, estoque e estatísticas em um único painel. Seus clientes reservam; você administra.",
+    ctaPrimary: "Teste grátis 1 mês",
+    ctaSecondary: "Ver demo em vídeo",
+    proof: "+[DATO_REAL] complexos já reservam online com a gente",
+    proofNote: "Dados verificados com referências de clientes",
+    scrollHint: "Descubra como funciona",
+    mockupAlt: "Painel de reservas do complexo com uma reserva confirmada e um pagamento aprovado",
+    floatingBooking: "Reserva confirmada",
+    floatingBookingMeta: "Quadra 3 · 19:00 · Pago",
+    floatingPayment: "Pagamento aprovado",
+    floatingPaymentMeta: "Sinal R$ 18.000 · Mercado Pago",
+  },
+  trust: {
+    title: "Conectado com as ferramentas que você já usa",
+    subtitle:
+      "As reservas entram por onde seu cliente já está: a busca, o chat ou a rede social.",
+    countriesLabel: "Disponível em 14 países da América",
+  },
+  reservas: {
+    eyebrow: "Site próprio + respostas automáticas",
+    h1: "Um site com a sua marca que reserva sozinho",
+    lead:
+      "Cada complexo recebe um site próprio com disponibilidade real, horários e preços. O jogador escolhe a quadra, escolhe o horário e paga: a reserva fica confirmada em menos de um minuto, a qualquer hora do dia.",
+    benefit1Title: "Reservas em menos de 1 minuto",
+    benefit1Body:
+      "Três telas: quadra, horário e pagamento. Sem cadastros eternos nem formulários de 12 campos.",
+    benefit2Title: "Sem depender de ligações",
+    benefit2Body:
+      "O horário se vende às 3 da manhã da mesma forma que às 11 da manhã. Você não perde mais uma reserva por falta de resposta.",
+    benefit3Title: "WhatsApp, redes e Google automáticos",
+    benefit3Body:
+      "As dúvidas que chegam pelo chat, Instagram ou perfil do Google são respondidas com disponibilidade real e link de reserva. Se perguntam fora do horário, o horário é tomado do mesmo jeito.",
+    phoneAria: "Fluxo de reserva no celular",
+    step1: "Escolha a quadra",
+    step1Body: "Disponibilidade real por dia e horário",
+    step2: "Escolha o horário",
+    step2Body: "Sessões de 60, 90 ou 120 minutos",
+    step3: "Pague o sinal",
+    step3Body: "Confirmação imediata via Mercado Pago",
+    stepDots: "Etapas do fluxo de reserva",
+    inboundTitle: "Também entra pelo chat",
+    inboundBody:
+      "Se o cliente perguntar em vez de reservar, o bot oferece horários, registra a consulta e deixa o link a um clique.",
+  },
+  pagos: {
+    eyebrow: "Integração com Mercado Pago",
+    h1: "Cada reserva, paga e garantida",
+    lead:
+      "Você define o percentual de sinal por quadra e a regra de cancelamento que quiser. O Mercado Pago processa o pagamento na hora: a reserva entra confirmada sozinha e o reembolso roda com a regra que você definiu.",
+    sliderLabel: "Antecedência com que o cliente cancela",
+    sliderHint: "Mova o controle para ver o que acontece com o sinal",
+    sliderNow: "Cancela com",
+    sliderNowValue: "{hours} h de antecedência",
+    refundTitle: "O sinal é devolvido em 100%",
+    refundBody:
+      "O cliente cancela com mais de 24 horas de antecedência, então o sinal volta para o cartão automaticamente.",
+    retainTitle: "O sinal fica no seu complexo",
+    retainBody:
+      "Com menos de 24 horas de antecedência o sinal é retido e o horário volta a ficar disponível para você vender de novo.",
+    amountLabel: "Sinal da quadra 3",
+    amountValue: "R$ 18.000",
+    policyTitle: "Regras que você define",
+    policy1: "Percentual de sinal por quadra",
+    policy2: "Janela de reembolso automático",
+    policy3: "Bloqueio de horários e pré-venda",
+    guaranteeLabel: "Reservas confirmadas com pagamento",
+    guaranteeValue: "100%",
+    methodsLabel: "Formas de pagamento",
+    balanceLabel: "Saldo restante na quadra",
+    balanceValue: "Paga na chegada",
+    cta: "Testar com as minhas regras",
+  },
+  panel: {
+    eyebrow: "Software online multiusuário",
+    h1: "Administre o complexo de onde estiver",
+    lead:
+      "Reservas, consumos do bar, perfis de usuário e resolução de sobreposições em um painel online que funciona em qualquer dispositivo e com várias pessoas trabalhando ao mesmo tempo.",
+    gridAria: "Grade de horários por quadra e faixa",
+    gridHint: "Arraste um horário para outra faixa e veja a detecção de sobreposição",
+    court1: "Quadra 1",
+    court2: "Quadra 2",
+    court3: "Quadra 3",
+    booking: "Reserva",
+    conflictTitle: "Sobreposição detectada",
+    conflictBody:
+      "Este horário já está ocupado na Quadra 2 às 19:00. Revise antes de salvar a alteração.",
+    conflictCta: "Revisar horários",
+    resolvedTitle: "Horário movido sem conflitos",
+    resolvedBody:
+      "O horário foi para a Quadra 3 às 20:00 e a equipe vê a atualização na hora.",
+    feature1Title: "Perfis e permissões",
+    feature1Body: "Administrador, responsável de turno e bar com permissões distintas.",
+    feature2Title: "Multiusuário ao vivo",
+    feature2Body:
+      "Cada alteração aparece na hora em todos os dispositivos da equipe.",
+    feature3Title: "Consumos do bar",
+    feature3Body: "Pedidos lançados no horário e cobrados no mesmo lugar.",
+  },
+  caja: {
+    eyebrow: "Caixa e estoque",
+    h1: "Cada real e cada item, anotado",
+    lead:
+      "Um fechamento de caixa diário com todos os movimentos e o estoque atualizado no momento em que você consome ou repõe.",
+    cashTitle: "Caixa do dia",
+    cashBody: "Entradas, sinais, consumos e saídas, com responsável e horário.",
+    stockTitle: "Estoque em tempo real",
+    stockBody: "Estoque do bar e insumos com alerta de estoque baixo.",
+    barTitle: "Consumos do bar",
+    barBody: "Pedidos vinculados à reserva e cobrados no caixa.",
+    auditTitle: "Fechamento com responsável",
+    auditBody: "Cada diferença fica registrada com quem fez e quando.",
+    kpiCash: "Em caixa hoje",
+    kpiStock: "Estoque baixo",
+    kpiSales: "Vendas de hoje",
+    tableAria: "Movimentos de caixa do dia",
+    colMovement: "Movimento",
+    colMethod: "Meio",
+    colUser: "Responsável",
+    colAmount: "Valor",
+    row1: "Sinal · Quadra 3 · 19:00",
+    row2: "Consumo · Bar · 3 bebidas",
+    row3: "Reserva · Quadra 1 · 11:00",
+    methodCard: "Mercado Pago",
+    methodCash: "Dinheiro",
+    methodTransfer: "Transferência",
+    user1: "Mariana",
+    user2: "Julián",
+    user3: "Sistema",
+  },
+  estadisticas: {
+    eyebrow: "Estatísticas em tempo real",
+    h1: "Decida com números, não com intuição",
+    lead:
+      "Ocupação, receita e horários de pico atualizados ao vivo. Com isso você define qual quadra ampliar, que hora reajustar e qual turno manter aberto.",
+    kpi1Label: "Ocupação semanal",
+    kpi2Label: "Receita do mês",
+    kpi3Label: "Reserva média",
+    kpi4Label: "Horários de pico",
+    chart1Title: "Ocupação por hora",
+    chart1Sub: "Média das últimas 4 semanas",
+    chart2Title: "Receita por dia",
+    chart2Sub: "Últimos 7 dias",
+    chart3Title: "Receita por quadra",
+    chart3Sub: "Participação no mês",
+    hours: ["10", "12", "14", "16", "18", "20", "22"],
+    occupancy: [38, 52, 44, 71, 96, 88, 61],
+    days: ["Seg", "Ter", "Qua", "Qui", "Sex", "Sáb", "Dom"],
+    revenue: [42, 55, 48, 66, 88, 100, 74],
+    courts: ["Quadra 1", "Quadra 2", "Quadra 3", "Quadra 4"],
+    courtShare: [38, 27, 22, 13],
+    sampleNote:
+      "Dados de exemplo para mostrar o formato. Os números reais do seu complexo aparecem ao conectar o painel.",
+    metricOccupancy: "{value}%",
+    metricRevenue: "R$ {value}k",
+    metricAverage: "R$ {value}",
+    metricPeak: "{value} h",
+  },
+  roadmap: {
+    eyebrow: "Em breve",
+    h1: "O que vem, de perto",
+    lead:
+      "Estamos construindo as peças que faltam para o complexo funcionar sozinho, inclusive a organização dos jogadores.",
+    notifyTitle: "Avise-me quando sair",
+    notifyBody: "Deixe seu e-mail e escrevemos no dia em que ficar disponível.",
+    notifyCta: "Me avisar",
+    notifyDone: "Pronto! Avisamos no dia em que sair.",
+    notifyEmailLabel: "Seu e-mail",
+    statusInDev: "Em desenvolvimento",
+    statusBeta: "Em beta privado",
+    statusPlanned: "Planejado",
+    items: [
+      {
+        title: "Montagem de jogos e “Falta 1”",
+        body:
+          "Combinação por nível e disponibilidade: quem procura grupo encontra um sem que você precise organizar nada.",
+      },
+      {
+        title: "Inscrição em torneios",
+        body:
+          "Criador de torneios, cobrança de inscrições e lista de participantes em um só lugar.",
+      },
+      {
+        title: "Gestão de aulas e atividades",
+        body: "Oficinas, academias e aulas com vagas, presença e cobrança por período.",
+      },
+      {
+        title: "API do WhatsApp",
+        body:
+          "Conecte seus próprios fluxos e automações sobre a conversa do clube.",
+      },
+    ],
+  },
+  video: {
+    eyebrow: "Demo do produto",
+    h1: "Veja o painel funcionando",
+    lead:
+      "Tour real pelo painel: criar uma reserva, cobrar, movê-la na grade e fechar o caixa.",
+    play: "Reproduzir a demo",
+    loading: "Carregando a demo…",
+    duration: "3:24",
+    posterAlt: "Prévia do painel de gestão com a grade de horários",
+    transcript: "Ver a transcrição da demo",
+    transcriptText:
+      "A demo mostra quatro percursos: cadastro de quadras e horários, reserva online com sinal cobrado via Mercado Pago, arraste de horários na grade com aviso de sobreposição e fechamento de caixa com estoque atualizado.",
+  },
+  steps: {
+    eyebrow: "Como começar",
+    h1: "Do zero à primeira reserva em um dia",
+    lead:
+      "Não precisa migrar nada. Comece carregando suas quadras e já no mesmo dia receba a primeira reserva.",
+    step1Title: "Cadastre-se e crie seu complexo",
+    step1Body: "Dados básicos, logotipo e horários. Leva alguns minutos.",
+    step2Title: "Cadastre quadras e horários",
+    step2Body: "Preços, duração da sessão e regras de sinal por quadra.",
+    step3Title: "Receba sua primeira reserva",
+    step3Body:
+      "Compartilhe seu link e as reservas entram sozinhas, pagas e confirmadas.",
+    timeLabel: " Tempo estimado: {value}",
+    time1: "5 minutos",
+    time2: "15 minutos",
+    time3: "Desde o primeiro dia",
+  },
+  faq: {
+    eyebrow: "Perguntas frequentes",
+    h1: "Tudo o que costumam nos perguntar",
+    lead: "Se faltar algo, escreva e respondemos no mesmo dia.",
+    contactCta: "Fazer outra pergunta",
+    items: [
+      {
+        q: "Preciso ter meu próprio site?",
+        a: "Não. Publicamos um site próprio para o seu complexo com seu logotipo, suas cores, suas quadras e seus preços. Você pode usar o domínio que já tem ou o que entregamos com o plano.",
+      },
+      {
+        q: "E se um cliente cancelar?",
+        a: "O sistema aplica a regra que você definiu para aquela quadra: com mais de 24 horas de antecedência o sinal é devolvido automaticamente; com menos de 24 horas ele é retido e o horário volta a ficar disponível para vender de novo.",
+      },
+      {
+        q: "Preciso ter conta no Mercado Pago?",
+        a: "Sim, é o meio de pagamento que usamos para cobrar os sinais. A integração é guiada: ajudamos você a vincular sua conta e verificar os dados uma única vez.",
+      },
+      {
+        q: "Posso usar o painel pelo celular?",
+        a: "Sim. O painel é online e está otimizado para celular e tablet. Você consegue ver a grade de horários ou fechar o caixa direto da quadra, sem voltar ao escritório.",
+      },
+      {
+        q: "Quantas pessoas podem trabalhar ao mesmo tempo?",
+        a: "Quantas você quiser. O painel é multiusuário: cada pessoa entra com seu próprio perfil e tudo que muda aparece na hora nos outros dispositivos.",
+      },
+      {
+        q: "O mês grátis tem condições?",
+        a: "O período de teste não tem custo nem compromisso de permanência. No fim mostramos o detalhamento e você decide se quer continuar; os dados e a configuração são mantidos.",
+      },
+      {
+        q: "E os dados que eu já tenho cadastrados?",
+        a: "Você pode migrá-los com nossa assistência durante a implantação. Também pode começar manualmente: o cadastro de quadras e horários leva alguns minutos por complexo.",
+      },
+    ],
+  },
+  cta: {
+    eyebrow: "Comece hoje",
+    h1: "Teste o sistema com o seu complexo",
+    lead:
+      "Um mês completo, sem cartão e sem compromisso. Ajudamos a colocar suas quadras no ar no mesmo dia.",
+    formTitle: "Criar meu teste grátis",
+    name: "Nome do complexo",
+    namePlaceholder: "Complexo dos Ipês",
+    email: "E-mail",
+    emailPlaceholder: "ola@complexo.com",
+    phone: "WhatsApp",
+    phonePlaceholder: "+55 11 00000-0000",
+    courts: "Quantidade de quadras",
+    courtsPlaceholder: "Escolha uma opção",
+    courts1: "1 a 3 quadras",
+    courts2: "4 a 8 quadras",
+    courts3: "Mais de 8 quadras",
+    submit: "Começar meu teste grátis",
+    submitting: "Enviando…",
+    successTitle: "Tudo certo, já começamos!",
+    successBody:
+      "Escrevemos no seu e-mail para combinar a implantação. Enquanto isso, seu espaço já está reservado.",
+    successCta: "Voltar ao início",
+    errorTitle: "Não conseguimos enviar o formulário",
+    errorBody: "Revise os dados ou escreva para a gente. Respondemos no mesmo dia.",
+    privacy: "Usamos seus dados só para falar sobre este teste. Sem spam.",
+    alternatives:
+      "Prefere falar com alguém? Escreva por e-mail ou WhatsApp.",
+  },
+  footer: {
+    product: "Produto",
+    company: "Empresa",
+    legal: "Legal",
+    downloadTitle: "Reserve na hora",
+    downloadBody: "Baixe o app e tenha seus horários à mão.",
+    appStore: "App Store",
+    playStore: "Google Play",
+    privacy: "Política de privacidade",
+    terms: "Termos e condições",
+    cookies: "Cookies",
+    countryTitle: "Escolha seu país",
+    countryBody: "Preço e moeda são ajustados ao seu mercado.",
+    rights: "Todos os direitos reservados.",
+    madeIn: "Feito para complexos de pádel, futebol e tênis na América.",
+  },
+  common: {
+    demo: "Ver demo",
+    learnMore: "Saiba mais",
+    soon: "Em breve",
+    new: "Novo",
+    beta: "Beta",
+    ariaLoading: "Carregando",
+    ariaScrollTop: "Voltar ao topo",
+  },
+  theme: {
+    label: "Mudar tema",
+    light: "Modo claro",
+    dark: "Mode escuro",
+  },
+  cookies: {
+    title: "Cookies",
+    body:
+      "Usamos cookies analíticos para entender como o site é usado. Você pode aceitá-los ou continuar navegando sem eles.",
+    accept: "Aceitar",
+    reject: "Somente essenciais",
+    more: "Ver política de privacidade",
+  },
+};
+
+export default messages;
