@@ -55,3 +55,6 @@ next-env.d.ts
 
 # Binarios descargados (tunel)
 /.tools/
+
+# Clones anidados
+/Software-Canchas/
