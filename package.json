@@ -11,7 +11,8 @@
     "test:watch": "vitest",
     "qa:capture": "node scripts/qa/capture.mjs",
     "qa:e2e": "node scripts/qa/e2e.mjs",
-    "prepare": "husky"
+    "prepare": "husky",
+    "tunnel": "node scripts/tunnel.mjs"
   },
   "dependencies": {
     "@hookform/resolvers": "^5.9.2",

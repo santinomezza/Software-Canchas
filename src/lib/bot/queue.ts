@@ -16,6 +16,7 @@ import {
   updateBookingPayment,
 } from "@/lib/db/repo";
 import { isSlotAvailable } from "@/lib/scheduling";
+import { absoluteUrl } from "@/lib/app-url";
 import type { BotPorts } from "./types";
 
 /**

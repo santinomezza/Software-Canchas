@@ -1,5 +1,6 @@
 import { createHmac, timingSafeEqual } from "node:crypto";
 import { getIntegration } from "@/lib/db/repo";
+import { absoluteUrl } from "@/lib/app-url";
 import { decryptSecret } from "@/lib/crypto";
 
 /**

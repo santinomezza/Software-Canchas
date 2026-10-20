@@ -47,7 +47,76 @@ registrada en la auditoría.
 
 ---
 
-## 2. Alta en Meta for Developers
+## 1.5 El dominio que te pide
+
+Meta y Mercado Pago exigen una **URL HTTPS pública** para registrar los
+webhooks. No alcanza con `localhost`.
+
+### Opción rápida (para ahora): túnel
+
+El repo trae un script que levanta un túnel HTTPS, actualiza el `.env.local`
+con la URL generada y te imprime los valores exactos para pegar:
+
+```bash
+# 1. Descargar cloudflared (una sola vez)
+powershell -c "Invoke-WebRequest -Uri 'https://github.com/cloudflare/cloudflared/releases/latest/download/cloudflared-windows-amd64.exe' -OutFile '.tools/cloudflared.exe'"
+
+# 2. Con el server corriendo en otra terminal
+npm run tunnel
+```
+
+Salida:
+
+```
+  Dominio público: https://link-sleeps-congress-typing.trycloudflare.com
+
+  Meta for Developers → Webhooks:
+    URL de callback:  https://.../api/whatsapp/webhook
+    Token:            1cd8ccb09cb9d56e6da7e7134385d992
+
+  Mercado Pago → notificación de pago:
+    https://.../api/mercadopago/webhook?complex=<ID_DEL_COMPLEJO>
+```
+
+Después de cambiar la URL, **reiniciá el server**: `APP_URL` se lee en
+runtime, pero el `.env.local` se carga al arrancar.
+
+> El dominio del túnel rápido cambia cada vez que lo levantás. Sirve para
+> **obtener las credenciales y probar**, no para producción: si el dominio
+> cambia, hay que volver a actualizar la URL del webhook en Meta.
+
+### Opción de producción: dominio propio
+
+1. Comprá o usá un dominio (por ejemplo `cancha.app`).
+2. Apuntá el DNS a tu hosting (Vercel, Railway, un VPS con Docker).
+3. Poné en el entorno:
+
+```bash
+APP_URL=https://cancha.app
+NEXT_PUBLIC_SITE_URL=https://cancha.app
+```
+
+`APP_URL` se lee **en runtime**: es la que se usa en la `notification_url` de
+Mercado Pago y en los links de los WhatsApp. `NEXT_PUBLIC_SITE_URL` sí se
+compila (canonical y Open Graph). Las dos tienen que coincidir.
+
+4. En Meta: `https://cancha.app/api/whatsapp/webhook`
+5. En Mercado Pago: `https://cancha.app/api/mercadopago/webhook?complex=<id>`
+
+> **Ojo con la base de datos en Vercel:** el filesystem es efímero, así que
+> SQLite no sirve. Hay que migrar a Postgres (el DDL con `EXCLUDE USING gist`
+> está en `docs/ARQUITECTURA.md`) o usar Turso. `docker-compose.yml` levanta
+> Postgres y Redis para desarrollo.
+
+### Cómo ver el `complex` id
+
+Es el número que aparece en la URL del panel y en la base:
+
+```bash
+node -e "const{DatabaseSync}=require('node:sqlite');const db=new DatabaseSync('./data/cancha.db');console.log(db.prepare('SELECT id,name FROM complexes').all())"
+```
+
+---
 
 1. Creá una cuenta en [developers.facebook.com](https://developers.facebook.com)
    y una app de tipo **Business**.

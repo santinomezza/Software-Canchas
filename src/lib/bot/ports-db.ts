@@ -14,6 +14,7 @@ import {
   setBookingState,
 } from "@/lib/db/repo";
 import { transaction } from "@/lib/db";
+import { absoluteUrl } from "@/lib/app-url";
 import type { BotPorts } from "./types";
 
 /**
@@ -133,10 +134,10 @@ export function createDbPorts(): BotPorts {
         payerEmail: "cliente@cancha.app",
         externalRef: String(input.bookingId),
         expiresAt: input.expiresAt,
-        notificationUrl: `${process.env.NEXT_PUBLIC_SITE_URL ?? ""}/api/mercadopago/webhook?complex=${input.complexId}`,
-        successUrl: `${process.env.NEXT_PUBLIC_SITE_URL ?? ""}/c/${input.complexId}`,
-        pendingUrl: `${process.env.NEXT_PUBLIC_SITE_URL ?? ""}/c/${input.complexId}`,
-        cancelUrl: `${process.env.NEXT_PUBLIC_SITE_URL ?? ""}/c/${input.complexId}`,
+        notificationUrl: absoluteUrl(`/api/mercadopago/webhook?complex=${input.complexId}`),
+        successUrl: absoluteUrl(`/c/${input.complexId}`),
+        pendingUrl: absoluteUrl(`/c/${input.complexId}`),
+        cancelUrl: absoluteUrl(`/c/${input.complexId}`),
       });
 
       return {
