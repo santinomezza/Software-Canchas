@@ -3,6 +3,7 @@ import { getTranslations } from "next-intl/server";
 import { Section } from "@/components/layout/section";
 import { Reveal } from "@/components/motion/reveal";
 import { TrialForm } from "@/components/interactive/trial-form";
+import { Link } from "@/i18n/navigation";
 import { siteConfig } from "@/content/site";
 
 export async function FinalCta() {
@@ -25,6 +26,14 @@ export async function FinalCta() {
               {t("h1")}
             </h2>
             <p className="mt-5 max-w-md text-base leading-relaxed text-ink-2">{t("lead")}</p>
+
+            <Link
+              href="/registro"
+              className="mt-5 inline-flex items-center gap-2 text-sm font-medium text-accent underline-offset-4 transition-colors hover:underline focus-visible:outline-2 focus-visible:outline-offset-4 focus-visible:outline-accent"
+            >
+              O creá tu cuenta y empezá a reservar ahora
+              <span aria-hidden>→</span>
+            </Link>
 
             <div className="mt-8 space-y-3">
               <a

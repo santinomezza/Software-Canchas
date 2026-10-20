@@ -6,8 +6,11 @@ import { cn } from "@/lib/utils";
 
 export const Slider = React.forwardRef<
   React.ElementRef<typeof SliderPrimitive.Root>,
-  React.ComponentPropsWithoutRef<typeof SliderPrimitive.Root>
->(function Slider({ className, ...props }, ref) {
+  React.ComponentPropsWithoutRef<typeof SliderPrimitive.Root> & {
+    /** Accessible name for the draggable thumb. */
+    thumbLabel?: string;
+  }
+>(function Slider({ className, thumbLabel, ...props }, ref) {
   const thumbCount = Array.isArray(props.value)
     ? props.value.length
     : Array.isArray(props.defaultValue)
@@ -26,6 +29,7 @@ export const Slider = React.forwardRef<
       {Array.from({ length: thumbCount }).map((_, index) => (
         <SliderPrimitive.Thumb
           key={index}
+          aria-label={thumbLabel}
           className={cn(
             "block size-6 rounded-full border-2 border-accent bg-[var(--bg-surface-1)]",
             "shadow-[0_4px_16px_-4px_var(--accent)] transition-[box-shadow,transform] duration-200",

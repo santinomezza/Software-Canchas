@@ -70,6 +70,7 @@ export function CancellationPolicy() {
           min={0}
           max={MAX_HOURS}
           step={1}
+          thumbLabel={t("sliderLabel")}
           aria-label={t("sliderLabel")}
         />
 

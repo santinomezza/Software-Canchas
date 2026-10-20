@@ -2,9 +2,6 @@ import type { Metadata, Viewport } from "next";
 import { notFound } from "next/navigation";
 import { hasLocale, NextIntlClientProvider } from "next-intl";
 import { getTranslations, setRequestLocale } from "next-intl/server";
-import { Navbar } from "@/components/sections/navbar";
-import { Footer } from "@/components/sections/footer";
-import { CookieBanner } from "@/components/sections/cookie-banner";
 import { Toaster } from "@/components/ui/toaster";
 import { ThemeProvider, themeInitScript } from "@/components/providers/theme-provider";
 import { routing } from "@/i18n/routing";
@@ -50,20 +47,20 @@ export async function generateMetadata({ params }: LocaleParams): Promise<Metada
     authors: [{ name: siteConfig.legalName }],
     creator: siteConfig.legalName,
     alternates: {
-      canonical: locale === routing.defaultLocale ? "/" : `/${locale}`,
+      canonical:
+        locale === routing.defaultLocale ? siteConfig.url : `${siteConfig.url}/${locale}`,
       languages: {
-        "es-AR": "/",
-        "es-MX": "/es-MX",
-        "es-CL": "/es-CL",
-        "es-CO": "/es-CO",
-        "pt-BR": "/pt-BR",
-        "x-default": "/",
-      },
-    },
+        "es-AR": siteConfig.url,
+        "es-MX": `${siteConfig.url}/es-MX`,
+        "es-CL": `${siteConfig.url}/es-CL`,
+        "es-CO": `${siteConfig.url}/es-CO`,
+        "pt-BR": `${siteConfig.url}/pt-BR`,
+        "x-default": siteConfig.url,
+      },    },
     openGraph: {
       type: "website",
       locale: locale.replace("-", "_"),
-      url: locale === routing.defaultLocale ? "/" : `/${locale}`,
+      url: locale === routing.defaultLocale ? siteConfig.url : `${siteConfig.url}/${locale}`,
       siteName: siteConfig.name,
       title: t("ogTitle"),
       description: t("ogDescription"),
@@ -118,21 +115,18 @@ export default async function LocaleLayout({ children, params }: LocaleParams & 
         </noscript>
       </head>
       <body className="min-h-screen bg-base text-ink">
-        <NextIntlClientProvider>
-          <ThemeProvider>
-            <a
-              href="#contenido"
-              className="sr-only-focusable focus:not-sr-only focus:fixed focus:left-4 focus:top-4 focus:z-[100] focus:rounded-full focus:bg-accent focus:px-5 focus:py-3 focus:text-sm focus:font-medium focus:text-accent-contrast"
-            >
-              {tNav("skipToContent")}
-            </a>
-            <Navbar />
-            <main id="contenido">{children}</main>
-            <Footer />
-            <CookieBanner />
-            <Toaster />
-          </ThemeProvider>
-        </NextIntlClientProvider>
+            <NextIntlClientProvider>
+              <ThemeProvider>
+                <a
+                  href="#contenido"
+                  className="sr-only-focusable focus:not-sr-only focus:fixed focus:left-4 focus:top-4 focus:z-[100] focus:rounded-full focus:bg-accent focus:px-5 focus:py-3 focus:text-sm focus:font-medium focus:text-accent-contrast"
+                >
+                  {tNav("skipToContent")}
+                </a>
+                <main id="contenido">{children}</main>
+                <Toaster />
+              </ThemeProvider>
+            </NextIntlClientProvider>
       </body>
     </html>
   );

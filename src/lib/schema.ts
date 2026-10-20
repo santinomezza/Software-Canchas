@@ -62,6 +62,7 @@ export function organizationSchema(locale: string) {
     url: siteConfig.url,
     logo: `${siteConfig.url}/icon`,
     email: siteConfig.email,
+    inLanguage: locale,
     areaServed: [
       "Argentina",
       "México",

@@ -8,6 +8,7 @@ import { Button } from "@/components/ui/button";
 import { CountrySelect } from "@/components/ui/country-select";
 import { ThemeToggle } from "@/components/ui/theme-toggle";
 import { siteConfig } from "@/content/site";
+import { Link } from "@/i18n/navigation";
 import { track } from "@/lib/analytics";
 import { cn } from "@/lib/utils";
 
@@ -87,7 +88,7 @@ export function Navbar() {
             onClick={() => onCtaClick("navbar")}
             asChild
           >
-            <a href="#empezar">{t("cta")}</a>
+            <Link href="/registro">{t("cta")}</Link>
           </Button>
 
           <button
@@ -126,7 +127,7 @@ export function Navbar() {
           <div className="mt-2 flex items-center justify-between gap-3 border-t border-line pt-4">
             <CountrySelect />
             <Button size="md" asChild onClick={() => onCtaClick("navbar-mobile")}>
-              <a href="#empezar">{t("cta")}</a>
+              <Link href="/registro">{t("cta")}</Link>
             </Button>
           </div>
         </div>

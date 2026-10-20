@@ -9,6 +9,11 @@ export default function proxy(request: NextRequest) {
 }
 
 export const config = {
-  // Skip API routes, Next internals and files with an extension (assets).
-  matcher: "/((?!api|_next|_vercel|.*\\..*).*)",
+  /**
+   * Skip API routes, Next internals, files with an extension (assets) and the
+   * metadata routes (icon, opengraph-image, robots, sitemap) — they are not
+   * localised and must be served from the root.
+   */
+  matcher:
+    "/((?!api|_next|_vercel|icon|opengraph-image|apple-icon|twitter-image|.*\\..*).*)",
 };

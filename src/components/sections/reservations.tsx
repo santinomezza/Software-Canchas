@@ -29,20 +29,18 @@ export async function Reservations() {
 
           <ul className="mt-10 space-y-7">
             {BENEFITS.map((benefit, index) => (
-              <Reveal key={benefit.key} delay={0.08 * index}>
-                <li className="flex gap-4">
-                  <span className="grid size-10 shrink-0 place-items-center rounded-[var(--radius-sm)] border border-accent/25 bg-accent/10">
-                    <benefit.Icon className="size-4 text-accent" strokeWidth={1.6} aria-hidden />
-                  </span>
-                  <div>
-                    <p className="font-display text-lg tracking-tight text-ink">
-                      {t(`${benefit.key}Title`)}
-                    </p>
-                    <p className="mt-1.5 max-w-md text-sm leading-relaxed text-ink-2">
-                      {t(`${benefit.key}Body`)}
-                    </p>
-                  </div>
-                </li>
+              <Reveal key={benefit.key} delay={0.08 * index} as="li" className="flex gap-4">
+                <span className="grid size-10 shrink-0 place-items-center rounded-[var(--radius-sm)] border border-accent/25 bg-accent/10">
+                  <benefit.Icon className="size-4 text-accent" strokeWidth={1.6} aria-hidden />
+                </span>
+                <div>
+                  <p className="font-display text-lg tracking-tight text-ink">
+                    {t(`${benefit.key}Title`)}
+                  </p>
+                  <p className="mt-1.5 max-w-md text-sm leading-relaxed text-ink-2">
+                    {t(`${benefit.key}Body`)}
+                  </p>
+                </div>
               </Reveal>
             ))}
           </ul>

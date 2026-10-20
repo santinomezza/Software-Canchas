@@ -13,6 +13,7 @@ import {
   SelectValue,
 } from "@/components/ui/select";
 import { track } from "@/lib/analytics";
+import { cn } from "@/lib/utils";
 
 /**
  * Country picker. Switching country switches the active locale, keeping the
@@ -45,11 +46,11 @@ export function CountrySelect({ className, compact = false }: { className?: stri
     <Select value={active.code} onValueChange={onChange} disabled={isPending}>
       <SelectTrigger
         aria-label={t("countryAria")}
-        className={
-          compact
-            ? "h-9 w-auto gap-2 border-transparent bg-transparent px-2 text-ink-2 hover:border-line hover:bg-surface-2 hover:text-ink [&>svg]:hidden"
-            : "h-9 w-auto gap-2 border-transparent bg-transparent px-2.5 text-ink-2 hover:border-line hover:bg-surface-2 hover:text-ink [&>svg]:hidden"
-        }
+        className={cn(
+          "h-9 w-auto gap-2 border-transparent bg-transparent px-2.5 text-ink-2 hover:border-line hover:bg-surface-2 hover:text-ink [&>svg]:hidden",
+          compact && "px-2",
+          className,
+        )}
       >
         <Globe className="size-4 shrink-0" strokeWidth={1.5} aria-hidden />
         <SelectValue>{compact ? active.code : `${active.code} · ${active.name}`}</SelectValue>

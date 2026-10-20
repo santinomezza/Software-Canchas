@@ -4,6 +4,7 @@ import { Moon, Sun } from "lucide-react";
 import { useTranslations } from "next-intl";
 import { useTheme } from "@/components/providers/theme-provider";
 import { track } from "@/lib/analytics";
+import { cn } from "@/lib/utils";
 
 export function ThemeToggle({ className }: { className?: string }) {
   const { theme, toggleTheme } = useTheme();
@@ -19,11 +20,12 @@ export function ThemeToggle({ className }: { className?: string }) {
       }}
       aria-label={t("label")}
       title={isDark ? t("light") : t("dark")}
-      className={
-        "grid size-9 place-items-center rounded-full border border-line text-ink-2 " +
-        "transition-colors duration-200 hover:border-accent/45 hover:text-accent " +
-        "focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-accent"
-      }
+      className={cn(
+        "grid size-9 place-items-center rounded-full border border-line text-ink-2",
+        "transition-colors duration-200 hover:border-accent/45 hover:text-accent",
+        "focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-accent",
+        className,
+      )}
     >
       {isDark ? (
         <Sun className="size-4" strokeWidth={1.5} aria-hidden />

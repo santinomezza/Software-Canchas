@@ -5,17 +5,36 @@ import * as React from "react";
 import { cn } from "@/lib/utils";
 
 /**
+ * Reads a query parameter without touching React state in an effect.
+ * The server always renders variant A; the swap happens after hydration and
+ * never shifts layout because both variants share the same grid cell.
+ */
+function useQueryParam(name: string): string | null {
+  const subscribe = React.useCallback(
+    (onChange: () => void) => {
+      window.addEventListener("popstate", onChange);
+      return () => window.removeEventListener("popstate", onChange);
+    },
+    [],
+  );
+
+  const getSnapshot = React.useCallback(
+    () => new URLSearchParams(window.location.search).get(name),
+    [name],
+  );
+
+  const getServerSnapshot = React.useCallback(() => null, []);
+
+  return React.useSyncExternalStore(subscribe, getSnapshot, getServerSnapshot);
+}
+
+/**
  * A/B headline swap driven by `?h=b` in the URL.
- * Both variants are rendered and stacked so the swap never shifts layout.
  */
 export function HeroHeadline({ variant = "a" }: { variant?: "a" | "b" }) {
   const t = useTranslations("hero");
-  const [active, setActive] = React.useState<"a" | "b">(variant);
-
-  React.useEffect(() => {
-    const param = new URLSearchParams(window.location.search).get("h");
-    if (param === "a" || param === "b") setActive(param);
-  }, []);
+  const param = useQueryParam("h");
+  const active: "a" | "b" = param === "a" || param === "b" ? param : variant;
 
   const render = (key: "h1A" | "h1B") => (
     <span

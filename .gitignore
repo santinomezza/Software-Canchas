@@ -32,6 +32,7 @@ yarn-error.log*
 
 # env files (can opt-in for committing if needed)
 .env*
+!.env.example
 
 # vercel
 .vercel
@@ -39,3 +40,15 @@ yarn-error.log*
 # typescript
 *.tsbuildinfo
 next-env.d.ts
+
+# Base de datos local (SQLite)
+/data/
+*.db
+*.db-wal
+*.db-shm
+
+# QA artifacts
+/qa/screenshots
+/playwright-report
+/test-results
+

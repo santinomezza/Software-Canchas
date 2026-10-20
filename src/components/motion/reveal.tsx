@@ -5,51 +5,15 @@ import * as React from "react";
 /**
  * Reveal-on-scroll.
  *
- * Implemented with IntersectionObserver + CSS transitions instead of a
- * motion library so that:
+ * Implemented with IntersectionObserver + CSS transitions instead of a motion
+ * library so that:
  *  - users who prefer reduced motion always see the content (CSS override),
  *  - users without JavaScript see the content (no-JS stylesheet),
  *  - the initial paint never depends on hydration.
+ *
+ * The revealed state is written straight to the DOM attribute: no React state
+ * is involved, so scrolling never triggers a re-render.
  */
-export function useReveal<T extends HTMLElement = HTMLElement>(options?: {
-  threshold?: number;
-  rootMargin?: string;
-}) {
-  const ref = React.useRef<T>(null);
-  const [revealed, setRevealed] = React.useState(false);
-
-  React.useEffect(() => {
-    const element = ref.current;
-    if (!element) return;
-
-    if (typeof IntersectionObserver === "undefined") {
-      setRevealed(true);
-      return;
-    }
-
-    const observer = new IntersectionObserver(
-      (entries) => {
-        for (const entry of entries) {
-          if (entry.isIntersecting) {
-            setRevealed(true);
-            observer.disconnect();
-          }
-        }
-      },
-      {
-        threshold: options?.threshold ?? 0.12,
-        rootMargin: options?.rootMargin ?? "0px 0px -6% 0px",
-      },
-    );
-
-    observer.observe(element);
-    return () => observer.disconnect();
-    // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, []);
-
-  return { ref, revealed };
-}
-
 export type RevealProps = {
   children: React.ReactNode;
   className?: string;
@@ -71,13 +35,37 @@ export function Reveal({
   distance = 18,
   as: Tag = "div",
 }: RevealProps) {
-  const { ref, revealed } = useReveal<HTMLElement>();
+  const ref = React.useRef<HTMLElement>(null);
+
+  React.useEffect(() => {
+    const element = ref.current;
+    if (!element) return;
+
+    if (typeof IntersectionObserver === "undefined") {
+      element.dataset.revealed = "true";
+      return;
+    }
+
+    const observer = new IntersectionObserver(
+      (entries) => {
+        for (const entry of entries) {
+          if (entry.isIntersecting) {
+            element.dataset.revealed = "true";
+            observer.disconnect();
+          }
+        }
+      },
+      { threshold: 0.12, rootMargin: "0px 0px -6% 0px" },
+    );
+
+    observer.observe(element);
+    return () => observer.disconnect();
+  }, []);
 
   return (
     <Tag
       ref={ref as React.Ref<never>}
       data-reveal=""
-      data-revealed={revealed ? "true" : undefined}
       className={className}
       style={
         {

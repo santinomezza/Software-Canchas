@@ -37,8 +37,6 @@ export function BookingGrid() {
   const [hover, setHover] = React.useState<{ court: number; slot: number } | null>(null);
   const [notice, setNotice] = React.useState<"idle" | "conflict" | "ok">("idle");
 
-  const dragged = bookings.find((b) => b.id === dragging) ?? null;
-
   function cellAt(clientX: number, clientY: number) {
     const element = document.elementFromPoint(clientX, clientY);
     const cell = element?.closest<HTMLElement>("[data-cell]");

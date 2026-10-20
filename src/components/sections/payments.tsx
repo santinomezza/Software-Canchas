@@ -59,7 +59,7 @@ export async function Payments() {
 
           <Reveal delay={0.16}>
             <div className="mt-6">
-              <TrackedCta href="#empezar" placement="payments" variant="secondary">
+              <TrackedCta href="/registro" placement="payments" variant="secondary">
                 {t("cta")}
               </TrackedCta>
             </div>

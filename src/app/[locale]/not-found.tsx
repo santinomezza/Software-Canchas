@@ -3,6 +3,7 @@
 import { useTranslations } from "next-intl";
 import { Button } from "@/components/ui/button";
 import { Container } from "@/components/layout/section";
+import { Link } from "@/i18n/navigation";
 
 /**
  * Localized 404. It is a client component because Next renders `not-found`
@@ -25,7 +26,7 @@ export default function NotFound() {
         necesitás.
       </p>
       <Button className="mt-8" asChild>
-        <a href="/">{tNav("brandAria")}</a>
+        <Link href="/">{tNav("brandAria")}</Link>
       </Button>
       <span className="sr-only">{t("ariaScrollTop")}</span>
     </Container>

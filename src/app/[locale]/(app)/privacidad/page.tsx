@@ -1,8 +1,17 @@
+import type { Metadata } from "next";
 import { getTranslations, setRequestLocale } from "next-intl/server";
 import { Section } from "@/components/layout/section";
 import { SectionHeading } from "@/components/layout/section-heading";
 import { Reveal } from "@/components/motion/reveal";
 import { siteConfig } from "@/content/site";
+
+export const metadata: Metadata = {
+  metadataBase: new URL(siteConfig.url),
+  title: "Políticas de privacidad",
+  description:
+    "Qué datos juntamos, por qué lo hacemos y cómo ejercer tus derechos. Política de privacidad de cancha.",
+  alternates: { canonical: `${siteConfig.url}/privacidad` },
+};
 
 type PageParams = { params: Promise<{ locale: string }> };
 

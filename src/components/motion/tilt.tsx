@@ -1,7 +1,8 @@
 "use client";
 
-import { motion, useMotionValue, useReducedMotion, useSpring, useTransform } from "framer-motion";
+import { motion, useMotionValue, useSpring, useTransform } from "framer-motion";
 import * as React from "react";
+import { useMediaQuery } from "@/lib/use-media-query";
 import { cn } from "@/lib/utils";
 
 export type TiltProps = {
@@ -16,17 +17,9 @@ export type TiltProps = {
  * for coarse pointers (touch), where it has no meaning.
  */
 export function Tilt({ children, className, max = 6 }: TiltProps) {
-  const reduce = useReducedMotion();
+  const reduce = useMediaQuery("(prefers-reduced-motion: reduce)");
+  const finePointer = useMediaQuery("(pointer: fine)");
   const ref = React.useRef<HTMLDivElement>(null);
-  const [finePointer, setFinePointer] = React.useState(false);
-
-  React.useEffect(() => {
-    const query = window.matchMedia("(pointer: fine)");
-    setFinePointer(query.matches);
-    const onChange = (event: MediaQueryListEvent) => setFinePointer(event.matches);
-    query.addEventListener("change", onChange);
-    return () => query.removeEventListener("change", onChange);
-  }, []);
 
   const x = useMotionValue(0);
   const y = useMotionValue(0);

@@ -1,7 +1,8 @@
 "use client";
 
-import { animate, useInView, useReducedMotion } from "framer-motion";
+import { animate, useInView } from "framer-motion";
 import * as React from "react";
+import { useMediaQuery } from "@/lib/use-media-query";
 
 export type CountUpProps = {
   value: number;
@@ -13,7 +14,9 @@ export type CountUpProps = {
 
 /**
  * Counts up to `value` the first time it enters the viewport.
- * With reduced motion the final value is rendered immediately.
+ *
+ * The counter writes to the DOM directly instead of going through React
+ * state: an animation frame must never trigger a re-render.
  */
 export function CountUp({
   value,
@@ -23,29 +26,31 @@ export function CountUp({
 }: CountUpProps) {
   const ref = React.useRef<HTMLSpanElement>(null);
   const inView = useInView(ref, { once: true, margin: "-12% 0px -12% 0px" });
-  const reduce = useReducedMotion();
-  const [display, setDisplay] = React.useState(() => format(0));
+  const reducedMotion = useMediaQuery("(prefers-reduced-motion: reduce)");
 
   React.useEffect(() => {
-    if (!inView) return;
+    const element = ref.current;
+    if (!element || !inView) return;
 
-    if (reduce) {
-      setDisplay(format(value));
+    if (reducedMotion) {
+      element.textContent = format(value);
       return;
     }
 
     const controls = animate(0, value, {
       duration: durationMs / 1000,
       ease: [0.16, 1, 0.3, 1],
-      onUpdate: (latest) => setDisplay(format(Math.round(latest))),
+      onUpdate: (latest) => {
+        element.textContent = format(Math.round(latest));
+      },
     });
 
     return () => controls.stop();
-  }, [inView, value, durationMs, format, reduce]);
+  }, [inView, value, durationMs, format, reducedMotion]);
 
   return (
     <span ref={ref} className={className}>
-      {display}
+      {format(0)}
     </span>
   );
 }

@@ -4,6 +4,7 @@ import { AnimatePresence, motion, useReducedMotion } from "framer-motion";
 import { useTranslations } from "next-intl";
 import * as React from "react";
 import { Button } from "@/components/ui/button";
+import { Link } from "@/i18n/navigation";
 import { track } from "@/lib/analytics";
 
 /**
@@ -60,7 +61,7 @@ export function StickyCta() {
               onClick={() => track({ name: "cta_click", props: { placement: "sticky" } })}
               asChild
             >
-              <a href="#empezar">{t("ctaPrimary")}</a>
+              <Link href="/registro">{t("ctaPrimary")}</Link>
             </Button>
           </div>
         </motion.div>

@@ -39,7 +39,7 @@ export async function Hero({ variant = "a" }: { variant?: "a" | "b" }) {
           </p>
 
           <div className="mt-8 flex flex-col gap-3 sm:flex-row sm:items-center">
-            <TrackedCta href="#empezar" placement="hero" size="lg">
+            <TrackedCta href="/registro" placement="hero" size="lg">
               {t("ctaPrimary")}
             </TrackedCta>
             <Button size="lg" variant="outline" asChild>

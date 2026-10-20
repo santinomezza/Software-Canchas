@@ -23,18 +23,27 @@ export const THEME_STORAGE_KEY = "cancha-theme";
  */
 export const themeInitScript = `(function(){try{var s=localStorage.getItem("${THEME_STORAGE_KEY}");var t=s==="light"||s==="dark"?s:"dark";document.documentElement.setAttribute("data-theme",t);}catch(e){document.documentElement.setAttribute("data-theme","dark");}})();`;
 
-export function ThemeProvider({ children }: { children: React.ReactNode }) {
-  const [theme, setThemeState] = React.useState<Theme>("dark");
+function readTheme(): Theme {
+  if (typeof document === "undefined") return "dark";
+  return document.documentElement.getAttribute("data-theme") === "light" ? "light" : "dark";
+}
 
-  React.useEffect(() => {
-    const current = document.documentElement.getAttribute("data-theme");
-    if (current === "light" || current === "dark") {
-      setThemeState(current);
-    }
-  }, []);
+function subscribe(onChange: () => void) {
+  if (typeof document === "undefined") return () => {};
+  const observer = new MutationObserver(onChange);
+  observer.observe(document.documentElement, {
+    attributes: true,
+    attributeFilter: ["data-theme"],
+  });
+  return () => observer.disconnect();
+}
+
+export function ThemeProvider({ children }: { children: React.ReactNode }) {
+  // The theme lives in the DOM attribute, so the provider reads it from there
+  // instead of duplicating it in React state.
+  const theme = React.useSyncExternalStore(subscribe, readTheme, () => "dark" as Theme);
 
   const setTheme = React.useCallback((next: Theme) => {
-    setThemeState(next);
     document.documentElement.setAttribute("data-theme", next);
     try {
       localStorage.setItem(THEME_STORAGE_KEY, next);
@@ -44,8 +53,8 @@ export function ThemeProvider({ children }: { children: React.ReactNode }) {
   }, []);
 
   const toggleTheme = React.useCallback(() => {
-    setTheme(theme === "dark" ? "light" : "dark");
-  }, [theme, setTheme]);
+    setTheme(readTheme() === "dark" ? "light" : "dark");
+  }, [setTheme]);
 
   const value = React.useMemo(
     () => ({ theme, setTheme, toggleTheme }),
