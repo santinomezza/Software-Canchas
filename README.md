@@ -18,17 +18,21 @@ El repositorio contiene **dos cosas que funcionan juntas**:
 ```bash
 npm install
 cp .env.example .env.local   # opcional: todo funciona sin variables
-npm run dev                  # http://localhost:3000
+npm run dev                  # http://localhost:3000 (desarrollo)
+npm run serve                # build de producción + server (usá este para el túnel)
 ```
 
 | Script | Qué hace |
 |---|---|
 | `npm run dev` | Servidor de desarrollo (Turbopack) |
+| `npm run serve` | Build + servidor de producción (**usá este para el túnel público**) |
 | `npm run build` / `npm start` | Build y serving de producción |
+| `npm run tunnel` | Túnel HTTPS público + actualiza el `.env.local` |
 | `npm run lint` | ESLint |
 | `npm test` | Unit tests (Vitest) |
 | `npm run qa:capture` | Capturas de pantalla en 1440 / 768 / 390 px |
 | `npm run qa:e2e` | Test end-to-end del flujo de onboarding |
+| `npm run qa:public` | Test end-to-end de la reserva desde la página pública |
 
 ### Variables de entorno
 

@@ -153,6 +153,18 @@ ocultando el botón. Y que la clave temporal sirva una sola vez.
 `scripts/qa/capture.mjs` captura la landing en **1440 / 768 / 390 px** y todas
 las secciones, y cuenta los errores de consola en cada viewport.
 
+### Reserva desde la página pública
+
+`scripts/qa/e2e-public.mjs` recorre el flujo completo del cliente contra la
+página pública del complejo: cancha → horario → datos → confirmar. Verifica
+que la redirección al checkout de Mercado Pago ocurre con una preferencia
+válida.
+
+> **Gotcha del dev server:** detrás de un proxy (túnel, ngrok) el dev server
+> **no hidrata**: el websocket de HMR falla y React queda sin hidratar, así que
+> la página se ve bien pero ningún botón responde. Con el build de producción
+> (`npm run serve`) hidrata perfecto. Para el túnel, siempre producción.
+
 ---
 
 ## Responsive

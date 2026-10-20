@@ -54,6 +54,13 @@ webhooks. No alcanza con `localhost`.
 
 ### Opción rápida (para ahora): túnel
 
+> **Importante:** para el túnel usá siempre el **build de producción**
+> (`npm run serve`). El dev server **no hidrata a través del túnel**: el
+> websocket de HMR falla con 502 y React queda sin hidratar, así que la página
+> se ve perfecta pero **ningún botón responde**. Es un problema del dev server
+> detrás de un proxy, no de la app: en `localhost` y en el build de producción
+> funciona perfecto.
+
 El repo trae un script que levanta un túnel HTTPS, actualiza el `.env.local`
 con la URL generada y te imprime los valores exactos para pegar:
 
@@ -61,7 +68,10 @@ con la URL generada y te imprime los valores exactos para pegar:
 # 1. Descargar cloudflared (una sola vez)
 powershell -c "Invoke-WebRequest -Uri 'https://github.com/cloudflare/cloudflared/releases/latest/download/cloudflared-windows-amd64.exe' -OutFile '.tools/cloudflared.exe'"
 
-# 2. Con el server corriendo en otra terminal
+# 2. En una terminal: el build de producción
+npm run serve
+
+# 3. En otra: el túnel
 npm run tunnel
 ```
 

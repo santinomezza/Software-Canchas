@@ -98,4 +98,8 @@ function updateEnv(url) {
   fs.writeFileSync(file, content.replace(/\n{3,}/g, "\n\n").trimStart(), "utf8");
   console.log(`  .env.local actualizado con APP_URL=${url}`);
   console.log("  Reiniciá el servidor para que tome la variable nueva.\n");
+  console.log("  IMPORTANTE: para el túnel usá el build de PRODUCCIÓN");
+  console.log("  (npm run serve). El dev server no hidrata a través del túnel:");
+  console.log("  el websocket de HMR falla y React queda sin hidratar, así que");
+  console.log("  los botones no responden.\n");
 }

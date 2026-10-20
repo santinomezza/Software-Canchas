@@ -12,7 +12,9 @@
     "qa:capture": "node scripts/qa/capture.mjs",
     "qa:e2e": "node scripts/qa/e2e.mjs",
     "prepare": "husky",
-    "tunnel": "node scripts/tunnel.mjs"
+    "tunnel": "node scripts/tunnel.mjs",
+    "serve": "npm run build && npm run start",
+    "qa:public": "node scripts/qa/e2e-public.mjs"
   },
   "dependencies": {
     "@hookform/resolvers": "^5.9.2",
