@@ -10,7 +10,10 @@ import {
   updateBookingPayment,
 } from "@/lib/db/repo";
 import { chargeDeposit, isSandbox } from "@/lib/integrations/mercado-pago";
-import { notifyBookingToAdmin } from "@/lib/integrations/notifications";
+import {
+  notifyBookingToAdmin,
+  notifyBookingToCustomer,
+} from "@/lib/integrations/notifications";
 import { getBooking } from "@/lib/db/repo";
 import {
   depositFor,
@@ -122,6 +125,21 @@ export async function createBookingAction(
   const booking = getBooking(bookingId);
   if (booking) {
     await notifyBookingToAdmin({
+      complex,
+      court,
+      booking,
+      dateLabel: new Intl.DateTimeFormat("es-AR", {
+        weekday: "long",
+        day: "numeric",
+        month: "long",
+      }).format(new Date(`${parsed.data.date}T12:00:00Z`)),
+      publicUrl: `${process.env.NEXT_PUBLIC_SITE_URL ?? ""}${base}`,
+    });
+  }
+
+  // The customer receives the details of their booking on WhatsApp.
+  if (booking) {
+    await notifyBookingToCustomer({
       complex,
       court,
       booking,

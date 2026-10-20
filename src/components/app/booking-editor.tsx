@@ -49,6 +49,7 @@ export function BookingEditor({
   locale,
   currency,
   canWrite = true,
+  onCancelBooking,
 }: {
   open: boolean;
   onOpenChange: (open: boolean) => void;
@@ -58,6 +59,7 @@ export function BookingEditor({
   locale: string;
   currency: string;
   canWrite?: boolean;
+  onCancelBooking?: () => void;
 }) {
   const t = useTranslations("agenda");
 
@@ -84,6 +86,7 @@ export function BookingEditor({
           currency={currency}
           canWrite={canWrite}
           onSaved={() => onOpenChange(false)}
+          onCancelBooking={onCancelBooking}
         />
       </DialogContent>
     </Dialog>
@@ -98,6 +101,7 @@ function BookingEditorForm({
   currency,
   canWrite,
   onSaved,
+  onCancelBooking,
 }: {
   courts: AgendaCourt[];
   booking?: AgendaBooking | null;
@@ -106,6 +110,7 @@ function BookingEditorForm({
   currency: string;
   canWrite: boolean;
   onSaved: () => void;
+  onCancelBooking?: () => void;
 }) {
   const t = useTranslations("agenda");
   const action = booking ? updatePanelBookingAction : createPanelBookingAction;
@@ -379,13 +384,29 @@ function BookingEditorForm({
 
       {state?.error ? <FieldError>{state.error}</FieldError> : null}
 
-      <div className="flex flex-col gap-3 sm:flex-row sm:justify-end">
-        <Button type="button" variant="ghost" onClick={() => onSaved()}>
-          {t("cancel")}
-        </Button>
-        <Button type="submit" loading={pending} loadingText={t("saving")} disabled={!canWrite}>
-          {booking ? t("saveChanges") : t("createBooking")}
-        </Button>
+      <div className="flex flex-col gap-3 sm:flex-row sm:items-center sm:justify-between">
+        {booking ? (
+          <Button
+            type="button"
+            variant="ghost"
+            size="sm"
+            className="justify-self-start text-danger hover:bg-danger/10"
+            onClick={onCancelBooking}
+          >
+            {t("cancelBooking")}
+          </Button>
+        ) : (
+          <span />
+        )}
+
+        <div className="flex flex-col gap-3 sm:flex-row">
+          <Button type="button" variant="ghost" onClick={() => onSaved()}>
+            {t("cancel")}
+          </Button>
+          <Button type="submit" loading={pending} loadingText={t("saving")} disabled={!canWrite}>
+            {booking ? t("saveChanges") : t("createBooking")}
+          </Button>
+        </div>
       </div>
     </form>
   );

@@ -15,7 +15,11 @@ import {
 } from "@/lib/db/repo";
 import { run, transaction } from "@/lib/db";
 import { PAYMENT_METHODS } from "@/lib/db/schema";
-import { notifyBookingToAdmin } from "@/lib/integrations/notifications";
+import {
+  notifyBookingCancellation,
+  notifyBookingToAdmin,
+  notifyBookingToCustomer,
+} from "@/lib/integrations/notifications";
 import {
   depositFor,
   hoursUntil,
@@ -181,6 +185,19 @@ export async function createPanelBookingAction(
     publicUrl: `${process.env.NEXT_PUBLIC_SITE_URL ?? ""}/c/${complex.slug}`,
   });
 
+  // The customer receives the details of their booking on WhatsApp.
+  await notifyBookingToCustomer({
+    complex,
+    court,
+    booking,
+    dateLabel: new Intl.DateTimeFormat("es-AR", {
+      weekday: "long",
+      day: "numeric",
+      month: "long",
+    }).format(new Date(`${parsed.data.date}T12:00:00Z`)),
+    publicUrl: `${process.env.NEXT_PUBLIC_SITE_URL ?? ""}/c/${complex.slug}`,
+  });
+
   syncBookingCashMovement({
     bookingId,
     complexId: complex.id,
@@ -285,13 +302,26 @@ export async function updatePanelBookingAction(
   return { ok: "ok" };
 }
 
-export async function cancelPanelBookingAction(formData: FormData): Promise<void> {
+export async function cancelPanelBookingAction(
+  _prev: BookingActionState,
+  formData: FormData,
+): Promise<BookingActionState> {
   const { user, complex } = await requireMemberAction("booking.write", "/panel/agenda");
 
   const bookingId = Number(formData.get("booking_id"));
   const booking = getBooking(bookingId);
-  if (!booking || booking.complex_id !== complex.id) return;
-  if (booking.status === "cancelled") return;
+  if (!booking || booking.complex_id !== complex.id) {
+    return { error: "Turno inexistente." };
+  }
+  if (booking.status === "cancelled") {
+    return { error: "El turno ya estaba cancelado." };
+  }
+
+  const message =
+    String(formData.get("cancellation_message") ?? "").trim() ||
+    "Tu turno fue cancelado";
+  const reason = String(formData.get("cancellation_reason") ?? "").trim() || null;
+  const court = getCourt(booking.court_id);
 
   const noticeHours = hoursUntil(booking.date, booking.start_min);
   const outcome = resolveCancellation(
@@ -310,6 +340,21 @@ export async function cancelPanelBookingAction(formData: FormData): Promise<void
       refund_cents: outcome.refunded ? outcome.depositCents : 0,
       payment_status: outcome.refunded ? "refunded" : "retained",
     });
+  });
+
+  // The customer is notified with the message the administrator wrote.
+  await notifyBookingCancellation({
+    complex,
+    court,
+    booking,
+    message,
+    reason,
+    dateLabel: new Intl.DateTimeFormat("es-AR", {
+      weekday: "long",
+      day: "numeric",
+      month: "long",
+    }).format(new Date(`${booking.date}T12:00:00Z`)),
+    publicUrl: `${process.env.NEXT_PUBLIC_SITE_URL ?? ""}/c/${complex.slug}`,
   });
 
   if (outcome.refunded && booking.deposit_cents > 0) {
@@ -334,6 +379,8 @@ export async function cancelPanelBookingAction(formData: FormData): Promise<void
   revalidatePath("/panel/agenda");
   revalidatePath("/panel/caja");
   revalidatePath("/panel/reservas");
+  revalidatePath(`/c/${complex.slug}`);
+  return { ok: "ok" };
 }
 
 export async function deletePanelBookingAction(formData: FormData): Promise<void> {

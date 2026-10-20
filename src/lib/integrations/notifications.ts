@@ -63,6 +63,67 @@ export type NotifyResult = {
 };
 
 /**
+ * Sends the cancellation notice to the player.
+ *
+ * Unlike the admin notice, this one goes to the customer's own number with
+ * the message the administrator wrote.
+ */
+export async function notifyBookingCancellation(input: {
+  complex: ComplexRow;
+  court?: CourtRow;
+  booking: BookingRow;
+  message: string;
+  reason?: string | null;
+  dateLabel: string;
+  publicUrl: string;
+}): Promise<NotifyResult> {
+  const { complex, booking, message } = input;
+
+  if (!booking.player_phone) return { sent: false, skipped: true };
+
+  const { token, settings } = resolveWhatsApp(complex.id);
+  if (!token || !settings.phone || !settings.phoneNumberId) {
+    return { sent: false, skipped: true };
+  }
+
+  const start = minutesToLabel(booking.start_min);
+  const body = [
+    `⚠️ *${complex.name}*`,
+    "",
+    message,
+    input.reason ? `Motivo: ${input.reason}` : null,
+    "",
+    `📅 ${input.dateLabel}`,
+    `🕐 ${start}`,
+    input.court ? `🏟️ ${input.court.name}` : null,
+    "",
+    `🔗 ${input.publicUrl}`,
+  ]
+    .filter((line) => line !== null)
+    .join("\n");
+
+  const result = await sendTextMessage({
+    token,
+    phoneNumberId: settings.phoneNumberId,
+    to: booking.player_phone,
+    body,
+  });
+
+  createNotification({
+    complexId: complex.id,
+    bookingId: booking.id,
+    channel: "whatsapp",
+    recipient: booking.player_phone,
+    body,
+    status: result.ok ? "sent" : "failed",
+    error: result.error ?? null,
+    sentAt: result.ok ? new Date().toISOString() : null,
+  });
+
+  return { sent: result.ok, skipped: false, error: result.error };
+}
+
+/**
  * Sends the booking notice to the administrator's own WhatsApp.
  * Never throws: a failed notification must not break the booking.
  */
@@ -108,12 +169,86 @@ export async function notifyBookingToAdmin(input: {
   return { sent: result.ok, skipped: false, error: result.error };
 }
 
+/**
+ * Sends the booking confirmation to the customer.
+ *
+ * Goes to the number that made the reservation, with every detail of the
+ * booking: court, date, time, duration, amounts and the cancellation policy.
+ */
+export async function notifyBookingToCustomer(input: {
+  complex: ComplexRow;
+  court?: CourtRow;
+  booking: BookingRow;
+  dateLabel: string;
+  publicUrl: string;
+}): Promise<NotifyResult> {
+  const { complex, booking } = input;
+
+  if (!booking.player_phone) return { sent: false, skipped: true };
+
+  const { token, settings } = resolveWhatsApp(complex.id);
+  if (!token || !settings.phone || !settings.phoneNumberId) {
+    return { sent: false, skipped: true };
+  }
+
+  const start = minutesToLabel(booking.start_min);
+  const end = minutesToLabel(booking.start_min + booking.duration_min);
+  const total = formatMoney(booking.amount_cents, complex.currency);
+  const deposit = formatMoney(booking.deposit_cents, complex.currency);
+  const balance = formatMoney(
+    Math.max(0, booking.amount_cents - booking.deposit_cents),
+    complex.currency,
+  );
+  const method = PAYMENT_METHODS[booking.payment_method ?? ""] ?? booking.payment_method ?? "—";
+
+  const body = [
+    `✅ *Reserva confirmada*`,
+    `*${complex.name}*`,
+    "",
+    `📅 ${input.dateLabel}`,
+    `🕐 ${start} – ${end} (${booking.duration_min} min)`,
+    input.court ? `🏟️ ${input.court.name}` : null,
+    "",
+    `👤 ${booking.player_name}`,
+    `💰 Turno completo: ${total}`,
+    `💳 Seña a pagar ahora: ${deposit}`,
+    `🏷️ Saldo a pagar en la cancha: ${balance}`,
+    `🧾 ${method}`,
+    booking.notes ? `📝 ${booking.notes}` : null,
+    "",
+    `ℹ️ Cancelando con más de ${complex.refund_window_hours} h de anticipación te devolvemos la seña.`,
+    "",
+    `🔗 ${input.publicUrl}`,
+  ]
+    .filter((line) => line !== null)
+    .join("\n");
+
+  const result = await sendTextMessage({
+    token,
+    phoneNumberId: settings.phoneNumberId,
+    to: booking.player_phone,
+    body,
+  });
+
+  createNotification({
+    complexId: complex.id,
+    bookingId: booking.id,
+    channel: "whatsapp",
+    recipient: booking.player_phone,
+    body,
+    status: result.ok ? "sent" : "failed",
+    error: result.error ?? null,
+    sentAt: result.ok ? new Date().toISOString() : null,
+  });
+
+  return { sent: result.ok, skipped: false, error: result.error };
+}
+
 /** Sends a test message to verify the WhatsApp configuration. */
 export async function sendTestMessage(input: {
   complexId: number;
   body: string;
-}): Promise<{ ok: boolean; skipped: boolean; error?: string }> {
-  const { token, settings } = resolveWhatsApp(input.complexId);
+}): Promise<{ ok: boolean; skipped: boolean; error?: string }> {  const { token, settings } = resolveWhatsApp(input.complexId);
 
   if (!token || !settings.phone || !settings.phoneNumberId) {
     return { ok: false, skipped: true, error: "Falta completar la configuración." };

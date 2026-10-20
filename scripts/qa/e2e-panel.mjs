@@ -183,6 +183,88 @@ await step("integrations can be configured from the complex settings", async () 
   await page.getByText(/rechazó el token|No se pudo contacting/i).first().waitFor({ timeout: 20000 });
 });
 
+
+await step("booking is cancelled with a custom message and reason", async () => {
+  await page.goto(`${base}/panel/agenda`, { waitUntil: "networkidle" });
+
+  // Open the first booking of the day and cancel it.
+  const block = page.getByRole("button", { name: /María Gómez Edited/ }).first();
+  if ((await block.count()) === 0) throw new Error("no booking to cancel");
+  await block.click();
+  await page.getByRole("dialog").waitFor({ timeout: 10000 });
+  await page.getByRole("button", { name: /Cancelar este turno/i }).click();
+
+  const cancelDialog = page.getByRole("dialog").filter({ hasText: /Cancelar el turno/i });
+  await cancelDialog.waitFor({ timeout: 10000 });
+
+  // The default message is prefilled and can be personalised.
+  const message = cancelDialog.locator("#cancel-message");
+  const defaultValue = await message.inputValue();
+  if (!/cancelado/i.test(defaultValue)) {
+    throw new Error(`unexpected default message: ${defaultValue}`);
+  }
+  await message.fill("Tu turno fue cancelado por mantenimiento de la cancha");
+
+  // The reason is optional and revealed by the checkbox.
+  await cancelDialog.getByRole("checkbox").check();
+  await cancelDialog.locator("#cancel-reason").fill("Mantenimiento programado");
+
+  await cancelDialog.getByRole("button", { name: /^Cancelar el turno$/i }).click();
+  await page.waitForTimeout(2500);
+
+  await page.getByText(/Turnos cancelados/i).first().waitFor({ timeout: 20000 });
+  await page.getByText(/María Gómez Edited/).first().waitFor({ timeout: 20000 });
+});
+
+await step("gallery, services and location are configurable", async () => {
+  await page.goto(`${base}/panel/configuracion`, { waitUntil: "networkidle" });
+  await page.getByRole("heading", { name: /Galería de fotos/i }).waitFor({ timeout: 20000 });
+  await page.getByRole("heading", { name: /Servicios que ofrecés/i }).waitFor({ timeout: 20000 });
+  await page.getByRole("heading", { name: /Ubicación/i }).waitFor({ timeout: 20000 });
+
+  // A gallery image by URL.
+  await page.getByRole("button", { name: /Pegar URL/i }).click();
+  await page.fill("#gallery-url", "https://example.com/foto-cancha.jpg");
+  await page.fill("#gallery-alt", "Cancha principal");
+  await page.getByRole("button", { name: /Agregar foto/i }).click();
+  await page.waitForTimeout(1800);
+  await page.getByAltText("Cancha principal").waitFor({ timeout: 20000 });
+
+  // Services: enable one that was off.
+  const duchas = page.locator("#service-duchas-enabled");
+  if ((await duchas.count()) > 0 && !(await duchas.isChecked())) {
+    await duchas.check();
+  }
+  await page.getByRole("button", { name: /Guardar servicios/i }).click();
+  await page.waitForTimeout(1800);
+
+  // Location: the coordinates are parsed from the Maps link.
+  await page.fill("#map-url", "https://www.google.com/maps/@-31.4201,-64.1888,17z");
+  await page.fill("#map-place", "Complejo Los Sauces");
+  await page.getByRole("button", { name: /Guardar ubicación/i }).click();
+  await page.waitForTimeout(1800);
+  await page.getByText(/Ubicación configurada/i).waitFor({ timeout: 20000 });
+});
+
+await step("the public page shows the gallery, services and map", async () => {
+  const link = await page.locator("a[href^='/c/']").first().getAttribute("href");
+  await page.goto(`${base}${link}`, { waitUntil: "networkidle" });
+
+  await page.getByRole("heading", { name: /Conocé nuestras canchas/i }).waitFor({ timeout: 20000 });
+  await page.getByRole("heading", { name: /Todo lo que necesitás/i }).waitFor({ timeout: 20000 });
+  await page.getByText("Duchas").first().waitFor({ timeout: 20000 });
+
+  // The map opens in a window.
+  await page.getByRole("button", { name: /Ver en el mapa/i }).click();
+  await page.waitForTimeout(1500);
+  const frame = page.locator("iframe");
+  await frame.waitFor({ timeout: 20000 });
+  const src = await frame.getAttribute("src");
+  if (!src || !src.includes("google.com/maps")) {
+    throw new Error(`unexpected map src: ${src}`);
+  }
+});
+
 console.log(`\nconsole errors: ${errors.length}`);
 for (const e of errors.slice(0, 10)) console.log("  !", e.replace(/%c[^%]*%c/g, ""));
 

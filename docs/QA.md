@@ -56,6 +56,10 @@ Reglas ejecutadas: `wcag2a`, `wcag2aa`, `wcag21a`, `wcag21aa`, `wcag22aa`.
 | `list` / `listitem` | `<li>` fuera de su `<ul>` en la sección de reservas | `Reveal` con `as="li"` |
 | HTML nesting | `<input hidden>` dentro de `<select>` en el selector de rol | Input movido fuera del `<select>` |
 | Números de formulario | `min={1}` con `step={100}` rechazaba $4.500 | `min={0}` para que el paso sea múltiplo de 100 |
+| Layout | La tira de fechas estiraba la grilla y generaba **687 px de scroll horizontal** en mobile | `min-w-0` en las columnas de la grilla |
+| Interacción | `pointer-events-none` en el hero dejaba el botón "Ver en el mapa" **sin clic** | Se quitó de la sección (el `mesh-layer` ya lo tiene) |
+| Compilación | Exportar una función sync desde un archivo `"use server"` rompe el build | `parseMapLink` se movió a `src/lib/maps.ts` |
+| Contenido | Mensaje ausente en el namespace equivocado | `contentTitle` / `contentLead` viven en `content`, no en `integrations` |
 
 ---
 
@@ -102,7 +106,7 @@ src/lib/scheduling.test.ts   15  (slots, solapamiento, seña, cancelación, slug
 src/lib/auth.test.ts          4  (hash scrypt, verificación, normalización)
 ```
 
-### End-to-end (Playwright) — 18 pasos en 2 suites
+### End-to-end (Playwright) — 22 pasos en 2 suites
 
 `scripts/qa/e2e.mjs` — flujo de onboarding contra un servidor levantado:
 
@@ -121,7 +125,7 @@ PASS  screenshot of the panel
 console errors: 0
 ```
 
-`scripts/qa/e2e-panel.mjs` — agenda, caja y equipo:
+`scripts/qa/e2e-panel.mjs` — agenda, caja, equipo y contenido:
 
 ```
 PASS  owner signs up and sets up the complex
@@ -132,13 +136,17 @@ PASS  cash report lists the movement and totals
 PASS  manual cash movement is registered
 PASS  employee is added with a temporary password
 PASS  employee signs in and sees a read-only agenda
+PASS  integrations can be configured from the complex settings
+PASS  booking is cancelled with a custom message and reason
+PASS  gallery, services and location are configurable
+PASS  the public page shows the gallery, services and map
 
 console errors: 0
 ```
 
-La última suite verifica además que un empleado con rol *encargado* **no**
+La suite de panel verifica además que un empleado con rol *encargado* **no**
 pueda entrar a la sección de equipo: el permiso se aplica en el servidor, no
-ocultando el botón.
+ocultando el botón. Y que la clave temporal sirva una sola vez.
 
 ### Capturas responsive — 0 errores de consola
 

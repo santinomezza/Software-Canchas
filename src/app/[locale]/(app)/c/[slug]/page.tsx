@@ -1,36 +1,37 @@
 import type { Metadata } from "next";
-import { CircleCheckBig, MapPin } from "lucide-react";
+import { CircleCheckBig, Clock, MapPin, ShieldCheck } from "lucide-react";
 import { getTranslations, setRequestLocale } from "next-intl/server";
 import { notFound } from "next/navigation";
 import {
   getBooking,
   getComplexBySlug,
-  listBookingsForSlot,
+  listBookingsInRange,
   listCourts,
+  listEnabledServices,
+  listImages,
   listOpeningHours,
 } from "@/lib/db/repo";
-import { BookingForm } from "@/components/app/booking-form";
-import { Badge } from "@/components/ui/badge";
-import { Logo } from "@/components/brand/logo";
-import { siteConfig } from "@/content/site";
-import { Link } from "@/i18n/navigation";
+import { LogoMark } from "@/components/brand/logo";
+import { PublicBooking } from "@/components/app/public-booking";
 import {
-  addDays,
-  buildSlots,
-  depositFor,
-  formatMoney,
-  todayIn,
-} from "@/lib/scheduling";
+  MapWindow,
+  PublicGallery,
+  PublicServices,
+} from "@/components/app/public-content";
+import { siteConfig } from "@/content/site";
+import { addDays, todayIn } from "@/lib/scheduling";
 
 type PageParams = {
   params: Promise<{ locale: string; slug: string }>;
-  searchParams: Promise<{
-    date?: string;
-    court?: string;
-    reserva?: string;
-    estado?: string;
-    sandbox?: string;
-  }>;
+  searchParams: Promise<{ reserva?: string; estado?: string; sandbox?: string }>;
+};
+
+const SPORT_LABEL: Record<string, string> = {
+  padel: "Pádel",
+  tenis: "Tenis",
+  futbol5: "Futbol 5",
+  futbol7: "Futbol 7",
+  futbol11: "Futbol 11",
 };
 
 export async function generateMetadata({ params }: PageParams): Promise<Metadata> {
@@ -42,8 +43,13 @@ export async function generateMetadata({ params }: PageParams): Promise<Metadata
   return {
     metadataBase: new URL(siteConfig.url),
     title: `${complex.name} · Reservas online`,
-    description: `Reservá tu turno online en ${complex.name}. Disponibilidad real y confirmación inmediata.`,
+    description: `Reservá tu turno online en ${complex.name}. Elegí cancha, horario y confirmá tu reserva al instante.`,
     robots: { index: true, follow: true },
+    openGraph: {
+      title: `${complex.name} · Reservas online`,
+      description: `Reservá tu turno online en ${complex.name}.`,
+      type: "website",
+    },
   };
 }
 
@@ -52,227 +58,181 @@ export default async function PublicComplexPage({ params, searchParams }: PagePa
   const query = await searchParams;
   setRequestLocale(locale);
 
-  const t = await getTranslations("app");
+  const t = await getTranslations("public");
 
   const complex = getComplexBySlug(slug);
   if (!complex) notFound();
 
   const courts = listCourts(complex.id);
   const hours = listOpeningHours(complex.id);
-
+  const images = listImages(complex.id);
+  const services = listEnabledServices(complex.id);
   const today = todayIn(complex.timezone);
-  const selectedDate = query.date && /^\d{4}-\d{2}-\d{2}$/.test(query.date) ? query.date : today;
-  const selectedCourt = courts.find((c) => c.id === Number(query.court));
 
-  const days = Array.from({ length: 7 }, (_, i) => addDays(today, i));
-  const weekdayFormatter = new Intl.DateTimeFormat(locale, { weekday: "short" });
-  const dayFormatter = new Intl.DateTimeFormat(locale, { day: "2-digit", month: "2-digit" });
+  const dates = Array.from({ length: 14 }, (_, i) => addDays(today, i));
+  const bookings = listBookingsInRange(complex.id, today, dates[dates.length - 1]).map((b) => ({
+    id: b.id,
+    court_id: b.court_id,
+    date: b.date,
+    start_min: b.start_min,
+    duration_min: b.duration_min,
+    status: b.status,
+  }));
 
   const confirmation =
     query.reserva && query.estado === "ok" ? getBooking(Number(query.reserva)) : undefined;
 
-  const slots = selectedCourt
-    ? buildSlots({
-        complex,
-        court: selectedCourt,
-        date: selectedDate,
-        hours,
-        bookings: listBookingsForSlot(complex.id, selectedCourt.id, selectedDate),
-      })
-    : [];
+  const sports = (JSON.parse(complex.sports || "[]") as string[]).map(
+    (sport) => SPORT_LABEL[sport] ?? sport,
+  );
 
   return (
     <div className="min-h-screen bg-base">
-      <header className="border-b border-line bg-surface-1">
+      {/* Header */}
+      <header className="sticky top-0 z-40 border-b border-line bg-[color-mix(in_oklab,var(--bg-base)_82%,transparent)] backdrop-blur-xl">
         <div className="container-page flex h-16 items-center justify-between gap-4">
-          <Logo name={complex.name} />
-          <Link
-            href="/"
-            className="text-xs text-ink-3 transition-colors hover:text-ink focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-accent"
-          >
-            {siteConfig.name}
-          </Link>
+          <div className="flex min-w-0 items-center gap-3">
+            <LogoMark className="size-7 shrink-0 text-accent" />
+            <span className="truncate font-display text-lg tracking-tight text-ink">
+              {complex.name}
+            </span>
+            {sports.length > 0 ? (
+              <span className="hidden items-center gap-1.5 sm:flex">
+                {sports.map((sport) => (
+                  <span
+                    key={sport}
+                    className="rounded-full border border-line bg-surface-1 px-2 py-0.5 text-[0.625rem] uppercase tracking-[0.08em] text-ink-3"
+                  >
+                    {sport}
+                  </span>
+                ))}
+              </span>
+            ) : null}
+          </div>
+
+          <div className="flex items-center gap-3">
+            <a
+              href="#reservar"
+              className="inline-flex h-9 items-center rounded-full bg-accent px-4 text-sm font-medium text-accent-contrast transition-colors hover:bg-[color-mix(in_oklab,var(--accent)_88%,white)] focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-accent"
+            >
+              {t("reserveNow")}
+            </a>
+          </div>
         </div>
       </header>
 
-      <main className="container-page py-10 sm:py-14">
-        {confirmation ? (
-          <div className="mb-10 flex items-start gap-3 rounded-[var(--radius-xl)] border border-accent/35 bg-accent/8 p-6">
-            <span className="grid size-10 shrink-0 place-items-center rounded-full bg-accent/20">
-              <CircleCheckBig className="size-5 text-accent" strokeWidth={1.7} aria-hidden />
-            </span>
-            <div>
-              <p className="font-display text-xl tracking-tight text-ink">
-                {t("bookingConfirmed")}
+      <main>
+        {/* Hero */}
+        <section className="mesh relative overflow-hidden">
+          <div className="mesh-layer" />
+          <div className="grain-layer" />
+
+          <div className="container-page relative py-10 sm:py-12">
+            {confirmation ? (
+              <div className="mb-10 flex items-start gap-3 rounded-[var(--radius-xl)] border border-accent/35 bg-accent/8 p-5">
+                <span className="grid size-10 shrink-0 place-items-center rounded-full bg-accent/20">
+                  <CircleCheckBig className="size-5 text-accent" strokeWidth={1.7} aria-hidden />
+                </span>
+                <div>
+                  <p className="font-display text-xl tracking-tight text-ink">
+                    {t("confirmedTitle")}
+                  </p>
+                  <p className="mt-1 text-sm text-ink-2">{t("confirmedBody")}</p>
+                  {query.sandbox === "1" ? (
+                    <p className="mt-2 text-xs text-gold">{t("sandboxNotice")}</p>
+                  ) : null}
+                </div>
+              </div>
+            ) : null}
+
+            <div className="max-w-2xl">
+              <p className="inline-flex items-center gap-2 rounded-full border border-accent/25 bg-accent/8 px-3 py-1 text-xs font-medium uppercase tracking-[0.14em] text-accent">
+                {t("eyebrow")}
               </p>
-              <p className="mt-1 text-sm text-ink-2">{t("bookingConfirmedBody")}</p>
-              {query.sandbox === "1" ? (
-                <p className="mt-2 text-xs text-gold">
-                  Modo demo: la reserva quedó registrada pero no se cobró ningún pago.
+
+              <h1 className="mt-5 font-display text-4xl leading-[1.04] tracking-[-0.035em] text-ink sm:text-[3.4rem]">
+                {complex.name}
+              </h1>
+
+              <p className="mt-4 text-base leading-relaxed text-ink-2 sm:text-lg">
+                {t("lead")}
+              </p>
+
+              {complex.address || complex.city ? (
+                <p className="mt-5 flex items-center gap-2 text-sm text-ink-3">
+                  <MapPin className="size-4" strokeWidth={1.5} aria-hidden />
+                  {[complex.address, complex.city].filter(Boolean).join(", ")}
                 </p>
+              ) : null}
+
+              <div className="mt-7 flex flex-wrap items-center gap-x-6 gap-y-3">
+                <span className="flex items-center gap-2 text-sm text-ink-2">
+                  <Clock className="size-4 text-accent" strokeWidth={1.6} aria-hidden />
+                  {t("openHours", { hours: complex.slot_minutes })}
+                </span>
+                <span className="flex items-center gap-2 text-sm text-ink-2">
+                  <ShieldCheck className="size-4 text-accent" strokeWidth={1.6} aria-hidden />
+                  {t("flexibleCancellation", { hours: complex.refund_window_hours })}
+                </span>
+              </div>
+
+              {complex.map_lat && complex.map_lng ? (
+                <div className="mt-6">
+                  <MapWindow
+                    lat={complex.map_lat}
+                    lng={complex.map_lng}
+                    place={complex.map_place ?? complex.name}
+                    url={complex.map_url}
+                  />
+                </div>
               ) : null}
             </div>
           </div>
-        ) : null}
+        </section>
 
-        <div className="grid gap-10 lg:grid-cols-12 lg:gap-12">
-          <div className="lg:col-span-7">
-            <Badge variant="accent">{t("publicTitle")}</Badge>
-            <h1 className="mt-4 font-display text-4xl tracking-[-0.03em] text-ink sm:text-5xl">
-              {complex.name}
-            </h1>
-            <p className="mt-3 text-base leading-relaxed text-ink-2">{t("publicLead")}</p>
+        {/* Booking */}
+        <section id="reservar" className="container-page pb-20 pt-4 sm:pb-28">
+          <PublicBooking            complex={{
+              slug: complex.slug,
+              name: complex.name,
+              currency: complex.currency,
+              timezone: complex.timezone,
+              slotMinutes: complex.slot_minutes,
+              refundWindowHours: complex.refund_window_hours,
+            }}            courts={courts.map((court) => ({
+              id: court.id,
+              name: court.name,
+              sport: court.sport,
+              priceCents: court.price_cents,
+              durationMin: court.duration_min,
+              depositPct: court.deposit_pct,
+            }))}
+            hours={hours.map((h) => ({
+              weekday: h.weekday,
+              opens_min: h.opens_min,
+              closes_min: h.closes_min,
+            }))}
+            bookings={bookings}
+            today={today}
+            dates={dates}
+            locale={locale}
+          />
+        </section>
 
-            {complex.address || complex.city ? (
-              <p className="mt-4 flex items-center gap-2 text-sm text-ink-3">
-                <MapPin className="size-4" strokeWidth={1.5} aria-hidden />
-                {[complex.address, complex.city].filter(Boolean).join(", ")}
-              </p>
-            ) : null}
-
-            {/* Date picker */}
-            <div className="mt-9">
-              <p className="text-xs font-medium uppercase tracking-[0.14em] text-ink-3">
-                {t("chooseDate")}
-              </p>
-              <div className="mt-3 flex gap-2 overflow-x-auto pb-1">
-                {days.map((day) => {
-                  const active = day === selectedDate;
-                  return (
-                    <a
-                      key={day}
-                      href={`/c/${complex.slug}?date=${day}`}
-                      aria-current={active ? "date" : undefined}
-                      className={
-                        "flex min-w-[4.5rem] shrink-0 flex-col items-center gap-0.5 rounded-[var(--radius-sm)] border px-3 py-2.5 text-center transition-colors " +
-                        (active
-                          ? "border-accent/50 bg-accent/12 text-accent"
-                          : "border-line bg-surface-1 text-ink-2 hover:border-accent/35")
-                      }
-                    >
-                      <span className="text-[0.6875rem] uppercase tracking-[0.1em]">
-                        {weekdayFormatter.format(new Date(`${day}T12:00:00Z`))}
-                      </span>
-                      <span className="text-sm font-medium">
-                        {dayFormatter.format(new Date(`${day}T12:00:00Z`))}
-                      </span>
-                    </a>
-                  );
-                })}
-              </div>
-            </div>
-
-            {/* Courts */}
-            <div className="mt-9">
-              <p className="text-xs font-medium uppercase tracking-[0.14em] text-ink-3">
-                {t("courtsTitle")}
-              </p>
-              {courts.length === 0 ? (
-                <p className="mt-4 text-sm text-ink-3">{t("noCourts")}</p>
-              ) : (
-                <ul className="mt-3 space-y-2.5">
-                  {courts.map((court) => {
-                    const active = selectedCourt?.id === court.id;
-                    return (
-                      <li key={court.id}>
-                        <a
-                          href={`/c/${complex.slug}?date=${selectedDate}&court=${court.id}`}
-                          className={
-                            "flex items-center justify-between gap-4 rounded-[var(--radius-md)] border px-5 py-4 transition-colors " +
-                            (active
-                              ? "border-accent/50 bg-accent/8"
-                              : "border-line bg-surface-1 hover:border-accent/35")
-                          }
-                        >
-                          <div>
-                            <p className="font-display text-lg tracking-tight text-ink">
-                              {court.name}
-                            </p>
-                            <p className="mt-0.5 text-xs text-ink-3">
-                              {court.sport} · {court.duration_min} min · {court.deposit_pct}%{" "}
-                              {t("courtDeposit")}
-                            </p>
-                          </div>
-                          <p className="font-display text-lg text-accent">
-                            {formatMoney(court.price_cents, complex.currency, locale)}
-                          </p>
-                        </a>
-                      </li>
-                    );
-                  })}
-                </ul>
-              )}
-            </div>
-
-            {/* Slots preview */}
-            {selectedCourt ? (
-              <div className="mt-9">
-                <p className="text-xs font-medium uppercase tracking-[0.14em] text-ink-3">
-                  {t("reserveTitle", { court: selectedCourt.name })}
-                </p>
-                {slots.length === 0 ? (
-                  <p className="mt-4 text-sm text-ink-3">{t("noSlots")}</p>
-                ) : (
-                  <ul className="mt-3 grid grid-cols-3 gap-2 sm:grid-cols-4 md:grid-cols-5">
-                    {slots.map((slot) => (
-                      <li key={slot.startMin}>
-                        {slot.available ? (
-                          <span className="flex h-11 items-center justify-center rounded-[var(--radius-sm)] border border-line bg-surface-1 text-sm font-medium text-ink">
-                            {slot.label}
-                          </span>
-                        ) : (
-                          <span
-                            aria-label={t("occupied")}
-                            className="flex h-11 cursor-not-allowed items-center justify-center rounded-[var(--radius-sm)] border border-line bg-surface-2/60 text-sm text-ink-3 line-through"
-                          >
-                            {slot.label}
-                          </span>
-                        )}
-                      </li>
-                    ))}
-                  </ul>
-                )}
-              </div>
-            ) : null}
-          </div>
-
-          {/* Booking panel */}
-          <aside className="lg:col-span-5">
-            <div className="lg:sticky lg:top-8">
-              {selectedCourt ? (
-                <div
-                  id="reserva"
-                  className="rounded-[var(--radius-xl)] border border-line bg-surface-1 p-6 shadow-[var(--shadow-lg)] sm:p-8"
-                >
-                  <p className="font-display text-xl tracking-tight text-ink">
-                    {t("reserveTitle", { court: selectedCourt.name })}
-                  </p>
-                  <p className="mt-1 text-sm text-ink-2">
-                    {selectedDate} · {selectedCourt.sport} · {selectedCourt.duration_min} min
-                  </p>
-
-                  <div className="mt-6">
-                    <BookingForm
-                      slug={complex.slug}
-                      courtId={selectedCourt.id}
-                      date={selectedDate}
-                      slots={slots}
-                      price={selectedCourt.price_cents}
-                      deposit={depositFor(selectedCourt.price_cents, selectedCourt.deposit_pct)}
-                      currency={complex.currency}
-                      locale={locale}
-                    />
-                  </div>
-                </div>
-              ) : (
-                <div className="rounded-[var(--radius-xl)] border border-line bg-surface-1 p-6 text-sm text-ink-2 shadow-[var(--shadow-md)]">
-                  {t("publicLead")}
-                </div>
-              )}
-            </div>
-          </aside>
-        </div>
+        <PublicGallery images={images} />
+        <PublicServices services={services} />
       </main>
+
+      {/* Footer */}
+      <footer className="border-t border-line bg-surface-1">
+        <div className="container-page flex flex-col gap-4 py-8 sm:flex-row sm:items-center sm:justify-between">
+          <div className="flex items-center gap-2.5">
+            <LogoMark className="size-6 text-ink-3" />
+            <span className="text-sm text-ink-3">{t("poweredBy")}</span>
+          </div>
+          <p className="text-xs text-ink-3">{t("footerNote")}</p>
+        </div>
+      </footer>
     </div>
   );
 }

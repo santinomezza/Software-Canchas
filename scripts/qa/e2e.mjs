@@ -91,17 +91,20 @@ await step("public page shows the complex and its court", async () => {
 });
 
 await step("booking is created from the public page", async () => {
-  const href = page.url();
-  await page.locator("a[href*='court=']").first().click();
-  await page.waitForLoadState("networkidle");
-  await page.locator("input[name='start']:not([disabled])").first().click({ force: true });
-  await page.fill("#player-name", "María Gómez");
-  await page.fill("#player-email", "maria@test.com");
-  await page.fill("#player-phone", "+5493512345678");
-  await page.getByRole("button", { name: /Confirmar reserva/i }).click();
+  // The new flow: pick a court, pick a slot, fill the form.
+  await page.getByRole("button", { name: /Pádel Norte/ }).first().click();
+  await page.waitForTimeout(400);
+
+  const slot = page.getByRole("button", { name: /^\d{2}:\d{2}$/ }).first();
+  await slot.click();
+  await page.waitForTimeout(300);
+
+  await page.fill("#pub-name", "María Gómez");
+  await page.fill("#pub-email", "maria@test.com");
+  await page.fill("#pub-phone", "+5493512345678");
+  await page.getByRole("button", { name: /Confirmar y pagar la seña/i }).click();
   await page.waitForURL(/reserva=/, { timeout: 20000 });
   await page.getByText(/Reserva confirmada/i).waitFor({ timeout: 20000 });
-  void href;
 });
 
 await step("booking shows up in the panel", async () => {
@@ -111,15 +114,15 @@ await step("booking shows up in the panel", async () => {
 });
 
 await step("double booking the same slot is rejected", async () => {
-  const complexUrl = await page.evaluate(() => window.location.href);
-  void complexUrl;
   await page.goto(`${base}/panel`, { waitUntil: "networkidle" });
   const link = await page.locator("a[href^='/c/']").first().getAttribute("href");
   await page.goto(`${base}${link}`, { waitUntil: "networkidle" });
-  await page.locator("a[href*='court=']").first().click();
-  await page.waitForLoadState("networkidle");
-  const free = page.locator("input[name='start']:not([disabled])");
-  if ((await free.count()) === 0) throw new Error("no free slot found to test the conflict");
+
+  // The slot taken by the previous booking must not be offered.
+  await page.getByRole("button", { name: /Pádel Norte/ }).first().click();
+  await page.waitForTimeout(400);
+  const taken = await page.locator("span.line-through").count();
+  if (taken === 0) throw new Error("the taken slot is not marked as occupied");
 });
 
 await step("screenshot of the panel", async () => {

@@ -176,11 +176,45 @@ CREATE INDEX IF NOT EXISTS idx_notifications_complex
   ON notifications(complex_id, created_at DESC);
 `;
 
+export const MIGRATION_5 = `
+-- v5 — contenido propio del complejo: galería, servicios, ubicación y el
+-- mensaje con el que se cancela un turno.
+ALTER TABLE complexes ADD COLUMN map_lat REAL;
+ALTER TABLE complexes ADD COLUMN map_lng REAL;
+ALTER TABLE complexes ADD COLUMN map_place TEXT;
+ALTER TABLE complexes ADD COLUMN map_url TEXT;
+ALTER TABLE bookings ADD COLUMN cancellation_message TEXT;
+
+CREATE TABLE IF NOT EXISTS complex_images (
+  id         INTEGER PRIMARY KEY AUTOINCREMENT,
+  complex_id INTEGER NOT NULL REFERENCES complexes(id) ON DELETE CASCADE,
+  url        TEXT NOT NULL,
+  alt        TEXT,
+  position   INTEGER NOT NULL DEFAULT 0,
+  created_at TEXT NOT NULL DEFAULT (datetime('now'))
+);
+CREATE INDEX IF NOT EXISTS idx_images_complex ON complex_images(complex_id, position);
+
+CREATE TABLE IF NOT EXISTS complex_services (
+  id          INTEGER PRIMARY KEY AUTOINCREMENT,
+  complex_id  INTEGER NOT NULL REFERENCES complexes(id) ON DELETE CASCADE,
+  key         TEXT NOT NULL,
+  title       TEXT NOT NULL,
+  description TEXT,
+  icon        TEXT NOT NULL DEFAULT 'sparkles',
+  position    INTEGER NOT NULL DEFAULT 0,
+  enabled     INTEGER NOT NULL DEFAULT 1,
+  UNIQUE (complex_id, key)
+);
+CREATE INDEX IF NOT EXISTS idx_services_complex ON complex_services(complex_id, position);
+`;
+
 export const MIGRATIONS: { version: number; sql: string }[] = [
   { version: 1, sql: MIGRATION_1 },
   { version: 2, sql: MIGRATION_2 },
   { version: 3, sql: MIGRATION_3 },
   { version: 4, sql: MIGRATION_4 },
+  { version: 5, sql: MIGRATION_5 },
 ];
 
 export type UserRow = {
@@ -206,6 +240,30 @@ export type ComplexRow = {
   refund_window_hours: number;
   status: "draft" | "ready";
   created_at: string;
+  map_lat?: number | null;
+  map_lng?: number | null;
+  map_place?: string | null;
+  map_url?: string | null;
+};
+
+export type ComplexImageRow = {
+  id: number;
+  complex_id: number;
+  url: string;
+  alt: string | null;
+  position: number;
+  created_at: string;
+};
+
+export type ComplexServiceRow = {
+  id: number;
+  complex_id: number;
+  key: string;
+  title: string;
+  description: string | null;
+  icon: string;
+  position: number;
+  enabled: number;
 };
 
 export type CourtRow = {
@@ -249,6 +307,7 @@ export type BookingRow = {
   concept?: string | null;
   cancelled_at?: string | null;
   cancellation_reason?: string | null;
+  cancellation_message?: string | null;
   refund_cents?: number | null;
   updated_at?: string | null;
 };

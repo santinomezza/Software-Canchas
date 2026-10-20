@@ -1,4 +1,4 @@
-import type { BookingRow, ComplexRow, CourtRow, OpeningHourRow } from "@/lib/db/schema";
+import type { BookingRow } from "@/lib/db/schema";
 
 /**
  * Scheduling engine.
@@ -55,12 +55,32 @@ export type Slot = {
   available: boolean;
 };
 
+/**
+ * Minimal shapes the slot engine needs. Keeping them narrow lets the same
+ * pure function run on the server and in the browser with plain JSON.
+ */
+export type SlotComplex = {
+  slot_minutes: number;
+  refund_window_hours: number;
+  timezone?: string;
+};
+
+export type SlotCourt = { id: number; duration_min: number };
+
+export type SlotBooking = {
+  court_id: number;
+  start_min: number;
+  duration_min: number;
+};
+
+export type SlotHour = { weekday: number; opens_min: number; closes_min: number };
+
 export function buildSlots(input: {
-  complex: Pick<ComplexRow, "slot_minutes" | "refund_window_hours">;
-  court: Pick<CourtRow, "id" | "duration_min">;
+  complex: SlotComplex;
+  court: SlotCourt;
   date: string;
-  hours: OpeningHourRow[];
-  bookings: BookingRow[];
+  hours: SlotHour[];
+  bookings: SlotBooking[];
   now?: Date;
 }): Slot[] {
   const { complex, court, date, hours, bookings, now } = input;
@@ -72,7 +92,8 @@ export function buildSlots(input: {
   const step = Math.max(15, complex.slot_minutes);
   const slots: Slot[] = [];
 
-  const isToday = date === todayIn("America/Argentina/Buenos_Aires", now ?? new Date());
+  const timezone = complex.timezone ?? "America/Argentina/Buenos_Aires";
+  const isToday = date === todayIn(timezone, now ?? new Date());
   const nowMin = isToday && now ? now.getHours() * 60 + now.getMinutes() : -1;
 
   for (

@@ -4,7 +4,6 @@ import { Trash2 } from "lucide-react";
 import { useTranslations } from "next-intl";
 import * as React from "react";
 import { usePathname, useRouter } from "@/i18n/navigation";
-import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
 import {
   AgendaBoard,
@@ -12,7 +11,12 @@ import {
   type AgendaCourt,
 } from "@/components/app/agenda-board";
 import { BookingEditor } from "@/components/app/booking-editor";
-import { cancelPanelBookingAction, deletePanelBookingAction } from "@/app/[locale]/actions/panel-booking";
+import {
+  CancelBookingDialog,
+  type CancelTarget,
+} from "@/components/app/cancel-booking-dialog";
+import { deletePanelBookingAction } from "@/app/[locale]/actions/panel-booking";
+import { minutesToLabel } from "@/lib/scheduling";
 
 export function AgendaView({
   courts,
@@ -47,6 +51,7 @@ export function AgendaView({
   const [courtId, setCourtId] = React.useState<number | undefined>(initialCourtId);
   const [editorOpen, setEditorOpen] = React.useState(false);
   const [editing, setEditing] = React.useState<AgendaBooking | null>(null);
+  const [cancelling, setCancelling] = React.useState<CancelTarget | null>(null);
   const [defaults, setDefaults] = React.useState<
     { courtId?: number; date?: string; startMin?: number } | undefined
   >(undefined);
@@ -149,21 +154,30 @@ export function AgendaView({
         locale={locale}
         currency={currency}
         canWrite={canWrite}
+        onCancelBooking={() => {
+          if (!editing) return;
+          const court = courts.find((c) => c.id === editing.courtId);
+          setEditorOpen(false);
+          setCancelling({
+            id: editing.id,
+            playerName: editing.playerName,
+            courtName: court?.name ?? "—",
+            dateLabel: new Intl.DateTimeFormat(locale, {
+              weekday: "long",
+              day: "numeric",
+              month: "long",
+            }).format(new Date(`${editing.date}T12:00:00Z`)),
+            timeLabel: minutesToLabel(editing.startMin),
+          });
+        }}
       />
 
-      {editing && canWrite ? (
-        <form action={cancelPanelBookingAction} className="mt-6">
-          <input type="hidden" name="booking_id" value={editing.id} />
-          <Button
-            type="submit"
-            variant="ghost"
-            size="sm"
-            className="text-danger hover:bg-danger/10"
-          >
-            {t("cancelBooking")}
-          </Button>
-        </form>
-      ) : null}
+      <CancelBookingDialog
+        target={cancelling}
+        onOpenChange={(open) => {
+          if (!open) setCancelling(null);
+        }}
+      />
 
       {!canWrite ? (
         <Badge variant="outline" className="mt-6">

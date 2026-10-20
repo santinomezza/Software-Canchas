@@ -34,7 +34,7 @@ const nextConfig: NextConfig = {
       "font-src 'self' data:",
       "media-src 'self' blob:",
       "connect-src 'self' https://plausible.io",
-      "frame-src 'self' https://www.youtube-nocookie.com https://player.vimeo.com",
+      "frame-src 'self' https://www.google.com https://maps.google.com https://www.youtube-nocookie.com https://player.vimeo.com",
       "frame-ancestors 'none'",
       "base-uri 'self'",
       "form-action 'self'",

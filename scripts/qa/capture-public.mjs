@@ -101,12 +101,16 @@ await page.waitForTimeout(700);
 await page.screenshot({ path: `${shots}/public-top.png` });
 await page.screenshot({ path: `${shots}/public-full.png`, fullPage: true });
 
-const courtLink = page.locator("a[href*='court=']").first();
-if ((await courtLink.count()) > 0) {
-  await courtLink.click();
-  await page.waitForLoadState("networkidle");
-  await page.waitForTimeout(500);
+// The new design selects a court with a button, then a time slot.
+const courtButton = page.getByRole("button", { name: /Pádel Norte/ }).first();
+if ((await courtButton.count()) > 0) {
+  await courtButton.click();
+  await page.waitForTimeout(600);
+  const slot = page.getByRole("button", { name: /^\d{2}:\d{2}$/ }).first();
+  if ((await slot.count()) > 0) await slot.click();
+  await page.waitForTimeout(600);
   await page.screenshot({ path: `${shots}/public-court.png` });
+  await page.screenshot({ path: `${shots}/public-court-full.png`, fullPage: true });
 }
 
 // Mobile

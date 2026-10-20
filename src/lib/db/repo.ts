@@ -2,7 +2,9 @@ import { all, insert, one, run, transaction } from "./index";
 import type {
   BookingRow,
   CashMovementRow,
+  ComplexImageRow,
   ComplexRow,
+  ComplexServiceRow,
   CourtRow,
   IntegrationProvider,
   IntegrationRow,
@@ -132,7 +134,19 @@ export function updateComplex(
     Omit<
       Pick<
         ComplexRow,
-        "name" | "address" | "city" | "country" | "currency" | "timezone" | "slot_minutes" | "refund_window_hours" | "status"
+        | "name"
+        | "address"
+        | "city"
+        | "country"
+        | "currency"
+        | "timezone"
+        | "slot_minutes"
+        | "refund_window_hours"
+        | "status"
+        | "map_lat"
+        | "map_lng"
+        | "map_place"
+        | "map_url"
       >,
       "sports"
     >
@@ -692,4 +706,123 @@ export function listNotifications(
     complexId,
     limit,
   );
+}
+
+/* ------------------------------------------------------------------ images */
+
+export function listImages(complexId: number): ComplexImageRow[] {
+  return all<ComplexImageRow>(
+    "SELECT * FROM complex_images WHERE complex_id = ? ORDER BY position ASC, id ASC",
+    complexId,
+  );
+}
+
+export function addImage(
+  complexId: number,
+  input: { url: string; alt?: string | null },
+): ComplexImageRow {
+  const next = one<{ position: number }>(
+    "SELECT COALESCE(MAX(position), -1) + 1 AS position FROM complex_images WHERE complex_id = ?",
+    complexId,
+  );
+
+  const id = insert(
+    "INSERT INTO complex_images (complex_id, url, alt, position) VALUES (?, ?, ?, ?)",
+    complexId,
+    input.url,
+    input.alt ?? null,
+    next?.position ?? 0,
+  );
+
+  return one<ComplexImageRow>("SELECT * FROM complex_images WHERE id = ?", id)!;
+}
+
+export function updateImage(
+  id: number,
+  complexId: number,
+  input: { alt?: string | null; position?: number },
+): void {
+  const entries = Object.entries(input).filter(([, value]) => value !== undefined);
+  if (entries.length === 0) return;
+  const sets = entries.map(([key]) => `${key} = ?`).join(", ");
+  run(
+    `UPDATE complex_images SET ${sets} WHERE id = ? AND complex_id = ?`,
+    ...entries.map(([, value]) => value),
+    id,
+    complexId,
+  );
+}
+
+export function deleteImage(id: number, complexId: number): void {
+  run("DELETE FROM complex_images WHERE id = ? AND complex_id = ?", id, complexId);
+}
+
+/* ---------------------------------------------------------------- services */
+
+export function listServices(complexId: number): ComplexServiceRow[] {
+  return all<ComplexServiceRow>(
+    "SELECT * FROM complex_services WHERE complex_id = ? ORDER BY position ASC, id ASC",
+    complexId,
+  );
+}
+
+export function listEnabledServices(complexId: number): ComplexServiceRow[] {
+  return all<ComplexServiceRow>(
+    "SELECT * FROM complex_services WHERE complex_id = ? AND enabled = 1 ORDER BY position ASC, id ASC",
+    complexId,
+  );
+}
+
+export function upsertService(
+  complexId: number,
+  input: {
+    key: string;
+    title: string;
+    description?: string | null;
+    icon: string;
+    position?: number;
+    enabled: boolean;
+  },
+): void {
+  const existing = one<ComplexServiceRow>(
+    "SELECT * FROM complex_services WHERE complex_id = ? AND key = ?",
+    complexId,
+    input.key,
+  );
+
+  if (existing) {
+    run(
+      `UPDATE complex_services
+       SET title = ?, description = ?, icon = ?, enabled = ?, position = ?
+       WHERE id = ?`,
+      input.title,
+      input.description ?? null,
+      input.icon,
+      input.enabled ? 1 : 0,
+      input.position ?? existing.position,
+      existing.id,
+    );
+    return;
+  }
+
+  const next = one<{ position: number }>(
+    "SELECT COALESCE(MAX(position), -1) + 1 AS position FROM complex_services WHERE complex_id = ?",
+    complexId,
+  );
+
+  insert(
+    `INSERT INTO complex_services (complex_id, key, title, description, icon, position, enabled)
+     VALUES (?, ?, ?, ?, ?, ?, ?)`,
+    complexId,
+    input.key,
+    input.title,
+    input.description ?? null,
+    input.icon,
+    input.position ?? next?.position ?? 0,
+    input.enabled ? 1 : 0,
+  );
+}
+
+export function deleteService(id: number, complexId: number): void {
+  run("DELETE FROM complex_services WHERE id = ? AND complex_id = ?", id, complexId);
 }

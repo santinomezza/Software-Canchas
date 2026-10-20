@@ -1,7 +1,12 @@
 import { getTranslations, setRequestLocale } from "next-intl/server";
 import { requireMemberAction } from "@/lib/auth";
-import { getIntegration, listNotifications } from "@/lib/db/repo";
+import { getIntegration, listImages, listNotifications, listServices } from "@/lib/db/repo";
 import { ComplexForm } from "@/components/app/complex-form";
+import {
+  GalleryManager,
+  LocationForm,
+  ServicesManager,
+} from "@/components/app/content-settings";
 import {
   IntegrationsSettings,
   type MercadoPagoStatus,
@@ -18,10 +23,13 @@ export default async function SettingsPage({ params }: PageParams) {
   setRequestLocale(locale);
   const t = await getTranslations("app");
   const tInt = await getTranslations("integrations");
+  const tContent = await getTranslations("content");
   const { complex, role } = await requireMemberAction("settings.read", "/panel/configuracion");
 
   const mp = getIntegration(complex.id, "mercadopago");
   const wa = getIntegration(complex.id, "whatsapp");
+  const images = listImages(complex.id);
+  const services = listServices(complex.id);
 
   const mpSecret = mp?.secret_encrypted ? decryptSecret(mp.secret_encrypted) : null;
   let mpSettings: { sandbox?: boolean } = {};
@@ -89,6 +97,23 @@ export default async function SettingsPage({ params }: PageParams) {
         )}
 
         {canManage ? <NotificationLog complexId={complex.id} /> : null}
+      </section>
+
+      <section className="mt-6 space-y-4">
+        <h2 className="font-display text-lg tracking-tight text-ink">{tContent("contentTitle")}</h2>
+        <p className="text-sm leading-relaxed text-ink-2">{tContent("contentLead")}</p>
+
+        {canManage ? (
+          <>
+            <GalleryManager images={images} />
+            <ServicesManager services={services} />
+            <LocationForm complex={complex} />
+          </>
+        ) : (
+          <p className="rounded-[var(--radius-lg)] border border-line bg-surface-1 p-5 text-sm text-ink-2">
+            {tInt("readOnly")}
+          </p>
+        )}
       </section>
     </div>
   );

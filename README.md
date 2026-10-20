@@ -166,7 +166,15 @@ Los E2E usan Playwright contra el servidor ya levantado.
 | Suite | Pasos | Cubre |
 |---|---|---|
 | `qa/e2e.mjs` | 10 | registro, complejo, canchas, horarios, página pública, reserva, conflicto de horario |
-| `qa/e2e-panel.mjs` | 8 | agenda, alta y edición de un turno, reporte de caja, movimiento manual, alta de empleado, permisos del rol |
+| `qa/e2e-panel.mjs` | 12 | agenda, alta y edición de un turno, cancelación con mensaje, reporte de caja, movimiento manual, alta de empleado, permisos del rol, integraciones, galería, servicios, ubicación y mapa |
+
+Además:
+
+```bash
+node scripts/qa/capture-public.mjs    # captura la página del cliente
+node scripts/qa/capture-content.mjs   # captura galería, servicios y mapa
+node scripts/qa/lighthouse.mjs        # Lighthouse + axe-core
+```
 
 ## Roles
 
@@ -193,11 +201,36 @@ permiso falla.
 4. Desde ese momento entra con su email y su clave, y ve el complejo del
    dueño con los permisos de su rol.
 
-## Integraciones (por complejo)
+## Contenido del complejo (todo personalizable)
+
+Desde **Configuración → Contenido del complejo**:
+
+- **Galería de fotos** — subí archivos (JPG, PNG, WebP, AVIF, hasta 6 MB) o pegá URLs. La primera foto es la portada. Se muestran en la página pública con lightbox.
+- **Servicios** — 12 plantillas (estacionamiento, bar, parrilla, wi-fi, torneos, paletas, vestuarios, eventos, duchas, kiosco, clases, mascotas). Activás los que tenés, cambiás el ícono y reescribís el título y la descripción. En la página pública aparecen como grilla.
+- **Ubicación** — pegá el link de Google Maps y las coordenadas se completan solas (o escribilas a mano). En el sitio del complejo se abre en una ventana con el mapa embebido.
+
+## Cancelación de turnos
+
+Desde la agenda, abrís un turno y tocás **Cancelar el turno**:
+
+- El mensaje por defecto es *"Tu turno fue cancelado"* y se puede personalizar.
+- Con la casilla **Agregar el motivo** se suma un motivo opcional.
+- El cliente recibe ese mensaje (y el motivo) por WhatsApp si el complejo tiene la integración configurada.
+- La cancelación sigue la regla de anticipación: con más de 24 h se devuelve la seña y queda el egreso registrado en caja; con menos, la seña se retiene.
+
+## Avisos automáticos por WhatsApp
+
+Con la integración configurada, cada turno dispara dos mensajes:
+
+| Destinatario | Contenido |
+|---|---|
+| **El administrador** (su propio chat) | Detalle del turno: cancha, fecha, horario, jugador, total, seña, medio de pago y link |
+| **El cliente** (el número que reservó) | Confirmación con todos los datos del turno y la política de cancelación |
+
+Un aviso fallido nunca rompe la reserva: queda registrado en la bitácora de Configuración.
 
 Cada complejo configura sus propias cuentas desde **Configuración →
 Integraciones**, sin depender de la configuración de la plataforma:
-
 - **Mercado Pago** — access token propio (opcionalmente public key y modo
   sandbox). El token se valida contra la API antes de guardarse y queda
   **cifrado** en la base (AES-256-GCM).

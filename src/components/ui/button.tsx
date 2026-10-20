@@ -80,14 +80,12 @@ export function Button({
       {asChild ? (
         children
       ) : (
-        <>
-          {loading ? (
-            <LoaderCircle aria-hidden className="animate-spin" />
-          ) : null}
+        <span className="inline-flex items-center justify-center gap-2">
+          {loading ? <LoaderCircle aria-hidden className="animate-spin" /> : null}
           <span className={cn(loading && loadingText ? "sr-only" : undefined)}>
             {loading && loadingText ? loadingText : children}
           </span>
-        </>
+        </span>
       )}
     </Comp>
   );
