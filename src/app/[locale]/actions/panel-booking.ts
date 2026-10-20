@@ -15,6 +15,7 @@ import {
 } from "@/lib/db/repo";
 import { run, transaction } from "@/lib/db";
 import { PAYMENT_METHODS } from "@/lib/db/schema";
+import { notifyBookingToAdmin } from "@/lib/integrations/notifications";
 import {
   depositFor,
   hoursUntil,
@@ -166,6 +167,20 @@ export async function createPanelBookingAction(
   }
 
   const booking = getBooking(bookingId)!;
+
+  // The complex notifies its own administrator on WhatsApp.
+  await notifyBookingToAdmin({
+    complex,
+    court,
+    booking,
+    dateLabel: new Intl.DateTimeFormat("es-AR", {
+      weekday: "long",
+      day: "numeric",
+      month: "long",
+    }).format(new Date(`${parsed.data.date}T12:00:00Z`)),
+    publicUrl: `${process.env.NEXT_PUBLIC_SITE_URL ?? ""}/c/${complex.slug}`,
+  });
+
   syncBookingCashMovement({
     bookingId,
     complexId: complex.id,

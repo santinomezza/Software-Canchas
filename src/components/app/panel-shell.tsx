@@ -7,6 +7,7 @@ import {
   LayoutGrid,
   LogOut,
   Settings,
+  UserCog,
   Users,
   Wallet,
 } from "lucide-react";
@@ -26,6 +27,7 @@ const NAV = [
   { key: "navHours", href: "/panel/horarios", Icon: CalendarClock },
   { key: "navCash", href: "/panel/caja", Icon: Wallet },
   { key: "navTeam", href: "/panel/empleados", Icon: Users },
+  { key: "navAccount", href: "/panel/mi-cuenta", Icon: UserCog },
   { key: "navSettings", href: "/panel/configuracion", Icon: Settings },
 ] as const;
 

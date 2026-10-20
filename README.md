@@ -58,7 +58,8 @@ Todas son opcionales — ver `.env.example` para el detalle.
 /panel/reservas        Reservas y cancelaciones
 /panel/caja            Reporte de caja con totales por medio de pago
 /panel/empleados       Equipo, roles y permisos
-/panel/configuracion   Datos del complejo y reglas
+/panel/mi-cuenta       Cambio de contraseña y datos del usuario
+/panel/configuracion   Datos del complejo, reglas e integraciones
 /c/[slug]              Página pública de reservas del complejo
 /privacidad            Políticas de privacidad
 ```
@@ -180,6 +181,40 @@ Los E2E usan Playwright contra el servidor ya levantado.
 Los permisos se aplican en el servidor (`src/lib/permissions.ts`): una URL de
 panel sin permiso redirige al dashboard con un aviso, y una server action sin
 permiso falla.
+
+## Ingreso de los empleados
+
+1. El dueño o un administrador va a **Equipo** y agrega a la persona (nombre,
+   email, WhatsApp y rol).
+2. El sistema crea la cuenta con una **contraseña temporal** y la muestra una
+   sola vez para que la comparta.
+3. Al primer ingreso, la contraseña temporal **deja de servir**: la persona
+   es enviada a **Mi cuenta** y tiene que elegir una propia.
+4. Desde ese momento entra con su email y su clave, y ve el complejo del
+   dueño con los permisos de su rol.
+
+## Integraciones (por complejo)
+
+Cada complejo configura sus propias cuentas desde **Configuración →
+Integraciones**, sin depender de la configuración de la plataforma:
+
+- **Mercado Pago** — access token propio (opcionalmente public key y modo
+  sandbox). El token se valida contra la API antes de guardarse y queda
+  **cifrado** en la base (AES-256-GCM).
+- **WhatsApp** — número del administrador (con prefijo internacional),
+  `phone_number_id` y el token permanente de Meta.
+
+Cuando entra una reserva, el complejo **se avisa a sí mismo por WhatsApp**: el
+mensaje va desde el número del negocio hacia el propio número del
+administrador, con el detalle del turno (cancha, fecha, horario, jugador,
+contacto, total, seña, método de pago y el link de la página pública). El
+panel guarda una bitácora de los avisos enviados.
+
+Si el complejo no configuró WhatsApp, la reserva se guarda igual y no se
+envía ningún aviso: una notificación fallida nunca rompe una reserva.
+
+> En el modo de desarrollo de Meta el destinatario tiene que ser un número
+> verificado; en producción alcanza con que el número esté dado de alta.
 
 ---
 

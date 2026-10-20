@@ -1,9 +1,15 @@
 import { getTranslations, setRequestLocale } from "next-intl/server";
-import { requireUser } from "@/lib/auth";
-import { getComplexForUser } from "@/lib/db/repo";
+import { requireMemberAction } from "@/lib/auth";
+import { getIntegration, listNotifications } from "@/lib/db/repo";
 import { ComplexForm } from "@/components/app/complex-form";
+import {
+  IntegrationsSettings,
+  type MercadoPagoStatus,
+  type WhatsAppStatus,
+} from "@/components/app/integrations-settings";
 import { Button } from "@/components/ui/button";
 import { publishComplexAction } from "@/app/[locale]/actions/panel";
+import { decryptSecret, maskSecret } from "@/lib/crypto";
 
 type PageParams = { params: Promise<{ locale: string }> };
 
@@ -11,12 +17,43 @@ export default async function SettingsPage({ params }: PageParams) {
   const { locale } = await params;
   setRequestLocale(locale);
   const t = await getTranslations("app");
-  const user = await requireUser("/panel/configuracion");
-  const complex = getComplexForUser(user.id);
+  const tInt = await getTranslations("integrations");
+  const { complex, role } = await requireMemberAction("settings.read", "/panel/configuracion");
 
-  if (!complex) {
-    return <p className="text-sm text-ink-2">{t("onboardingComplex")}</p>;
+  const mp = getIntegration(complex.id, "mercadopago");
+  const wa = getIntegration(complex.id, "whatsapp");
+
+  const mpSecret = mp?.secret_encrypted ? decryptSecret(mp.secret_encrypted) : null;
+  let mpSettings: { sandbox?: boolean } = {};
+  try {
+    mpSettings = mp ? (JSON.parse(mp.settings) as { sandbox?: boolean }) : {};
+  } catch {
+    mpSettings = {};
   }
+
+  let waSettings: { phone?: string; phoneNumberId?: string } = {};
+  try {
+    waSettings = wa ? (JSON.parse(wa.settings) as typeof waSettings) : {};
+  } catch {
+    waSettings = {};
+  }
+
+  const mercadoPago: MercadoPagoStatus = {
+    configured: Boolean(mp?.enabled && mpSecret),
+    masked: mpSecret ? maskSecret(mpSecret) : null,
+    publicKey: mp?.public_key ?? null,
+    sandbox: Boolean(mpSettings.sandbox),
+    source: mp?.enabled && mpSecret ? "complex" : "platform",
+  };
+
+  const whatsapp: WhatsAppStatus = {
+    configured: Boolean(wa?.enabled && waSettings.phone && waSettings.phoneNumberId),
+    phone: waSettings.phone ?? null,
+    phoneNumberId: waSettings.phoneNumberId ?? null,
+    source: wa?.enabled ? "complex" : "platform",
+  };
+
+  const canManage = role === "owner" || role === "admin";
 
   return (
     <div className="mx-auto max-w-3xl">
@@ -36,6 +73,64 @@ export default async function SettingsPage({ params }: PageParams) {
           <Button type="submit">{t("onboardingDone")}</Button>
         </form>
       ) : null}
+
+      <section className="mt-6">
+        <h2 className="font-display text-lg tracking-tight text-ink">{tInt("title")}</h2>
+        <p className="mt-1.5 text-sm leading-relaxed text-ink-2">{tInt("lead")}</p>
+
+        {canManage ? (
+          <div className="mt-5">
+            <IntegrationsSettings mercadoPago={mercadoPago} whatsapp={whatsapp} />
+          </div>
+        ) : (
+          <p className="mt-5 rounded-[var(--radius-lg)] border border-line bg-surface-1 p-5 text-sm text-ink-2">
+            {tInt("readOnly")}
+          </p>
+        )}
+
+        {canManage ? <NotificationLog complexId={complex.id} /> : null}
+      </section>
+    </div>
+  );
+}
+
+async function NotificationLog({ complexId }: { complexId: number }) {
+  const tInt = await getTranslations("integrations");
+  const notifications = listNotifications(complexId, 8);
+
+  return (
+    <div className="mt-6 rounded-[var(--radius-xl)] border border-line bg-surface-1 p-6">
+      <p className="font-display text-lg tracking-tight text-ink">{tInt("notificationTitle")}</p>
+
+      {notifications.length === 0 ? (
+        <p className="mt-3 text-sm text-ink-3">{tInt("notificationEmpty")}</p>
+      ) : (
+        <ul className="mt-4 space-y-2">
+          {notifications.map((notification) => (
+            <li
+              key={notification.id}
+              className="flex items-start justify-between gap-3 rounded-[var(--radius-sm)] border border-line bg-surface-2 px-3.5 py-2.5"
+            >
+              <p className="min-w-0 flex-1 truncate text-xs text-ink-2">
+                {notification.body.split("\n").find((line) => line.startsWith("👤")) ??
+                  notification.body.split("\n")[0]}
+              </p>
+              <span
+                className={
+                  "shrink-0 rounded-full border px-2 py-0.5 text-[0.625rem] font-medium " +
+                  (notification.status === "sent"
+                    ? "border-accent/35 bg-accent/10 text-accent"
+                    : "border-danger/35 bg-danger/10 text-danger")
+                }
+              >
+                {notification.status === "sent"
+                  ? tInt("notificationSent")
+                  : tInt("notificationFailed")}
+              </span>
+            </li>
+          ))}
+        </ul>
+      )}
     </div>
   );
 }

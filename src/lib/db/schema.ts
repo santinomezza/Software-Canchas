@@ -141,9 +141,46 @@ CREATE INDEX IF NOT EXISTS idx_cash_complex_date
 CREATE INDEX IF NOT EXISTS idx_cash_booking ON cash_movements(booking_id);
 `;
 
+export const MIGRATION_3 = `
+-- v3 — la contraseña temporal obliga a cambiarla en el primer ingreso.
+ALTER TABLE members ADD COLUMN must_change_password INTEGER NOT NULL DEFAULT 0;
+`;
+
+export const MIGRATION_4 = `
+-- v4 — integraciones por complejo (Mercado Pago, WhatsApp) y bitácora de avisos.
+CREATE TABLE IF NOT EXISTS integrations (
+  id               INTEGER PRIMARY KEY AUTOINCREMENT,
+  complex_id       INTEGER NOT NULL REFERENCES complexes(id) ON DELETE CASCADE,
+  provider         TEXT NOT NULL,
+  secret_encrypted TEXT,
+  public_key       TEXT,
+  settings         TEXT NOT NULL DEFAULT '{}',
+  enabled          INTEGER NOT NULL DEFAULT 1,
+  updated_at       TEXT NOT NULL DEFAULT (datetime('now')),
+  UNIQUE (complex_id, provider)
+);
+
+CREATE TABLE IF NOT EXISTS notifications (
+  id          INTEGER PRIMARY KEY AUTOINCREMENT,
+  complex_id  INTEGER NOT NULL REFERENCES complexes(id) ON DELETE CASCADE,
+  booking_id  INTEGER REFERENCES bookings(id) ON DELETE SET NULL,
+  channel     TEXT NOT NULL DEFAULT 'whatsapp',
+  recipient   TEXT,
+  body        TEXT NOT NULL,
+  status      TEXT NOT NULL DEFAULT 'pending',
+  error       TEXT,
+  sent_at     TEXT,
+  created_at  TEXT NOT NULL DEFAULT (datetime('now'))
+);
+CREATE INDEX IF NOT EXISTS idx_notifications_complex
+  ON notifications(complex_id, created_at DESC);
+`;
+
 export const MIGRATIONS: { version: number; sql: string }[] = [
   { version: 1, sql: MIGRATION_1 },
   { version: 2, sql: MIGRATION_2 },
+  { version: 3, sql: MIGRATION_3 },
+  { version: 4, sql: MIGRATION_4 },
 ];
 
 export type UserRow = {
@@ -224,12 +261,39 @@ export type MemberRow = {
   phone: string | null;
   active: number;
   created_at: string;
+  must_change_password?: number;
 };
 
 export type MemberRole = "owner" | "admin" | "encargado" | "bar" | "lectura";
 
-export type CashMovementRow = {
+export const INTEGRATION_PROVIDERS = ["mercadopago", "whatsapp"] as const;
+export type IntegrationProvider = (typeof INTEGRATION_PROVIDERS)[number];
+
+export type IntegrationRow = {
   id: number;
+  complex_id: number;
+  provider: IntegrationProvider;
+  secret_encrypted: string | null;
+  public_key: string | null;
+  settings: string;
+  enabled: number;
+  updated_at: string;
+};
+
+export type NotificationRow = {
+  id: number;
+  complex_id: number;
+  booking_id: number | null;
+  channel: string;
+  recipient: string | null;
+  body: string;
+  status: "pending" | "sent" | "failed";
+  error: string | null;
+  sent_at: string | null;
+  created_at: string;
+};
+
+export type CashMovementRow = {  id: number;
   complex_id: number;
   booking_id: number | null;
   concept: string;

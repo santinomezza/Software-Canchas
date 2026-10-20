@@ -135,21 +135,22 @@ await step("employee signs in and sees a read-only agenda", async () => {
   await employeePage.fill("#password", tempPassword);
 
   await employeePage.getByRole("button", { name: /^Entrar$/i }).click();
-  await employeePage.waitForURL(/\/panel/, { timeout: 20000 });
-  await employeePage.waitForTimeout(1500);
+  await employeePage.waitForURL(/\/panel\/mi-cuenta/, { timeout: 20000 });
+  await employeePage.waitForTimeout(1000);
   console.log("   employee url:", employeePage.url());
-  console.log(
-    "   employee body:",
-    (await employeePage.locator("body").innerText()).replace(/\s+/g, " ").slice(0, 220),
-  );
 
-  // The employee lands on the dashboard of the owner's complex.
-  await employeePage.waitForURL(/\/panel/, { timeout: 20000 });
-  await employeePage.waitForTimeout(1500);
-  console.log("   employee url:", employeePage.url());
-  await employeePage.getByText("Julián Soto").first().waitFor({ timeout: 20000 });
+  // The first login forces the employee to replace the temporary password.
+  await employeePage
+    .getByRole("heading", { name: /Elegí tu contraseña/i })
+    .waitFor({ timeout: 20000 });
+  await employeePage.fill("#current-password", tempPassword);
+  await employeePage.fill("#next-password", "nuevaClaveSegura456");
+  await employeePage.fill("#confirm-password", "nuevaClaveSegura456");
+  await employeePage.getByRole("button", { name: /Cambiar contraseña/i }).click();
+  await employeePage.waitForURL(/\/panel(\?|$)/, { timeout: 20000 });
+  await employeePage.waitForTimeout(1000);
 
-  // The agenda is available to the encargado.
+  // Now the agenda of the complex is reachable.
   await employeePage.goto(`${base}/panel/agenda`, { waitUntil: "networkidle" });
   await employeePage.getByRole("heading", { name: /turnos del día/i }).waitFor({ timeout: 20000 });
   await employeePage.getByText("Pádel Norte").first().waitFor({ timeout: 20000 });
@@ -166,6 +167,20 @@ await step("employee signs in and sees a read-only agenda", async () => {
   });
 
   await employeeContext.close();
+});
+
+await step("integrations can be configured from the complex settings", async () => {
+  await page.goto(`${base}/panel/configuracion`, { waitUntil: "networkidle" });
+  await page.getByRole("heading", { name: /Integraciones/i }).waitFor({ timeout: 20000 });
+  await page.getByText("Mercado Pago").first().waitFor({ timeout: 10000 });
+  await page.getByText("WhatsApp").first().waitFor({ timeout: 10000 });
+  await page.screenshot({ path: `${shots}/integraciones.png` });
+
+  // An invalid token must be rejected by the server-side validation.
+  await page.fill("#mp-token", "APP_USR-invalido-invalido-invalido");
+  await page.getByRole("button", { name: /Conectar Mercado Pago/i }).click();
+  await page.waitForTimeout(2500);
+  await page.getByText(/rechazó el token|No se pudo contacting/i).first().waitFor({ timeout: 20000 });
 });
 
 console.log(`\nconsole errors: ${errors.length}`);

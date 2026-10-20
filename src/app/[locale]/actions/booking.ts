@@ -9,7 +9,9 @@ import {
   listBookingsForSlot,
   updateBookingPayment,
 } from "@/lib/db/repo";
-import { chargeDeposit, isSandbox } from "@/lib/payments/mercado-pago";
+import { chargeDeposit, isSandbox } from "@/lib/integrations/mercado-pago";
+import { notifyBookingToAdmin } from "@/lib/integrations/notifications";
+import { getBooking } from "@/lib/db/repo";
 import {
   depositFor,
   isSlotAvailable,
@@ -101,6 +103,7 @@ export async function createBookingAction(
 
   const base = `/c/${complex.slug}`;
   const payment = await chargeDeposit({
+    complexId: complex.id,
     amountCents: depositCents,
     currency: complex.currency,
     description: `Seña ${court.name} · ${parsed.data.date} ${minutesToLabel(startMin)}`,
@@ -115,6 +118,22 @@ export async function createBookingAction(
     return { error: "No pudimos procesar el pago. Probá de nuevo en unos minutos." };
   }
 
+  // The complex notifies its own administrator on WhatsApp.
+  const booking = getBooking(bookingId);
+  if (booking) {
+    await notifyBookingToAdmin({
+      complex,
+      court,
+      booking,
+      dateLabel: new Intl.DateTimeFormat("es-AR", {
+        weekday: "long",
+        day: "numeric",
+        month: "long",
+      }).format(new Date(`${parsed.data.date}T12:00:00Z`)),
+      publicUrl: `${process.env.NEXT_PUBLIC_SITE_URL ?? ""}${base}`,
+    });
+  }
+
   if (payment.checkoutUrl) {
     redirect(payment.checkoutUrl);
   }
@@ -126,5 +145,5 @@ export async function createBookingAction(
     });
   }
 
-  redirect(`${base}?reserva=${bookingId}&estado=ok${isSandbox() ? "&sandbox=1" : ""}`);
+  redirect(`${base}?reserva=${bookingId}&estado=ok${isSandbox(complex.id) ? "&sandbox=1" : ""}`);
 }

@@ -8,6 +8,7 @@ import {
   findUserByEmail,
   getComplexForMember,
   getMember,
+  mustChangePassword,
   purgeExpiredSessions,
 } from "@/lib/db/repo";
 import type { ComplexRow, UserRow } from "@/lib/db/schema";
@@ -78,6 +79,18 @@ export async function requireUser(returnTo = "/panel"): Promise<UserRow> {
   return user;
 }
 
+/** True when the user still has to replace a temporary password. */
+export { mustChangePassword } from "@/lib/db/repo";
+
+/**
+ * Guard for the account pages: the owner never has to change a password, but
+ * an employee with a temporary one must.
+ */
+export async function requireAccountUser(): Promise<UserRow> {
+  const user = await requireUser("/panel/mi-cuenta");
+  return user;
+}
+
 /* ------------------------------------------------------- roles y permisos */
 
 /** The role a user has on a complex: owner, or the role they were given. */
@@ -111,6 +124,9 @@ async function resolveMember(permission: Permission, returnTo: string) {
   const role = roleFor(complex, user.id);
   if (!role) redirect("/panel");
   if (!role) throw new Error("Sin rol asignado.");
+
+  // A temporary password must be replaced before using the product.
+  if (mustChangePassword(user.id)) redirect("/panel/mi-cuenta?primer=1");
 
   return { user, complex, role };
 }

@@ -64,6 +64,7 @@ export async function addMemberAction(
       userId: existingUser.id,
       role: parsed.data.role,
       phone: parsed.data.phone || null,
+      mustChangePassword: true,
     });
     revalidatePath("/panel/empleados");
     return { ok: "added" };
@@ -80,6 +81,7 @@ export async function addMemberAction(
     userId: user.id,
     role: parsed.data.role,
     phone: parsed.data.phone || null,
+    mustChangePassword: true,
   });
 
   revalidatePath("/panel/empleados");

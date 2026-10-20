@@ -1,7 +1,7 @@
 import { ArrowRight, CalendarDays, Clock, MapPin, TriangleAlert } from "lucide-react";
 import { getTranslations } from "next-intl/server";
 import { redirect } from "next/navigation";
-import { getSessionUser, roleFor } from "@/lib/auth";
+import { getSessionUser, mustChangePassword, roleFor } from "@/lib/auth";
 import { getComplexForMember, listBookings, listCourts, listOpeningHours } from "@/lib/db/repo";
 import { ComplexForm } from "@/components/app/complex-form";
 import { CourtForm } from "@/components/app/court-form";
@@ -37,6 +37,9 @@ export default async function PanelPage({ params, searchParams }: PageParams) {
 
   const complex = getComplexForMember(user.id);
   const role = complex ? roleFor(complex, user.id) : undefined;
+
+  // A temporary password must be replaced before using the product.
+  if (mustChangePassword(user.id)) redirect("/panel/mi-cuenta?primer=1");
 
   /* ---------------------------------------------------- no complex yet */
   if (!complex) {

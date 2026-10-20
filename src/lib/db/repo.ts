@@ -4,8 +4,11 @@ import type {
   CashMovementRow,
   ComplexRow,
   CourtRow,
+  IntegrationProvider,
+  IntegrationRow,
   MemberRole,
   MemberRow,
+  NotificationRow,
   OpeningHourRow,
   UserRow,
 } from "./schema";
@@ -437,6 +440,10 @@ export function getMemberById(
   );
 }
 
+export function getMemberByUser(userId: number): MemberRow | undefined {
+  return one<MemberRow>("SELECT * FROM members WHERE user_id = ? LIMIT 1", userId);
+}
+
 export function getMemberByEmail(complexId: number, email: string): MemberRow | undefined {
   return one<MemberRow>(
     `SELECT m.* FROM members m JOIN users u ON u.id = m.user_id
@@ -448,16 +455,36 @@ export function getMemberByEmail(complexId: number, email: string): MemberRow | 
 
 export function addMember(
   complexId: number,
-  input: { userId: number; role: MemberRole; phone?: string | null },
+  input: { userId: number; role: MemberRole; phone?: string | null; mustChangePassword?: boolean },
 ): MemberRow {
   const id = insert(
-    "INSERT INTO members (complex_id, user_id, role, phone) VALUES (?, ?, ?, ?)",
+    "INSERT INTO members (complex_id, user_id, role, phone, must_change_password) VALUES (?, ?, ?, ?, ?)",
     complexId,
     input.userId,
     input.role,
     input.phone ?? null,
+    input.mustChangePassword ? 1 : 0,
   );
   return one<MemberRow>("SELECT * FROM members WHERE id = ?", id)!;
+}
+
+/** True when the member still has to replace their temporary password. */
+export function mustChangePassword(userId: number): boolean {
+  return (
+    one<{ must_change_password: number }>(
+      "SELECT must_change_password FROM members WHERE user_id = ? AND active = 1 LIMIT 1",
+      userId,
+    )?.must_change_password === 1
+  );
+}
+
+export function clearMustChangePassword(userId: number): void {
+  run("UPDATE members SET must_change_password = 0 WHERE user_id = ?", userId);
+}
+
+/** Replaces a user's password and clears the temporary-password flag. */
+export function setUserPassword(userId: number, passwordHash: string): void {
+  run("UPDATE users SET password_hash = ? WHERE id = ?", passwordHash, userId);
 }
 
 export function updateMember(
@@ -561,5 +588,108 @@ export function countCashMovementsForBooking(bookingId: number): number {
       "SELECT COUNT(*) AS n FROM cash_movements WHERE booking_id = ?",
       bookingId,
     )?.n ?? 0
+  );
+}
+
+/* ---------------------------------------------------------- integrations */
+
+export function getIntegration(
+  complexId: number,
+  provider: IntegrationProvider,
+): IntegrationRow | undefined {
+  return one<IntegrationRow>(
+    "SELECT * FROM integrations WHERE complex_id = ? AND provider = ?",
+    complexId,
+    provider,
+  );
+}
+
+export function listIntegrations(complexId: number): IntegrationRow[] {
+  return all<IntegrationRow>(
+    "SELECT * FROM integrations WHERE complex_id = ? ORDER BY provider",
+    complexId,
+  );
+}
+
+export function upsertIntegration(input: {
+  complexId: number;
+  provider: IntegrationProvider;
+  secretEncrypted?: string | null;
+  publicKey?: string | null;
+  settings?: string;
+  enabled?: boolean;
+}): void {
+  const existing = getIntegration(input.complexId, input.provider);
+
+  if (existing) {
+    run(
+      `UPDATE integrations
+       SET secret_encrypted = ?, public_key = ?, settings = ?, enabled = ?,
+           updated_at = datetime('now')
+       WHERE id = ?`,
+      input.secretEncrypted ?? existing.secret_encrypted,
+      input.publicKey ?? existing.public_key,
+      input.settings ?? existing.settings,
+      input.enabled === undefined ? existing.enabled : input.enabled ? 1 : 0,
+      existing.id,
+    );
+    return;
+  }
+
+  insert(
+    `INSERT INTO integrations (complex_id, provider, secret_encrypted, public_key, settings, enabled)
+     VALUES (?, ?, ?, ?, ?, ?)`,
+    input.complexId,
+    input.provider,
+    input.secretEncrypted ?? null,
+    input.publicKey ?? null,
+    input.settings ?? "{}",
+    input.enabled === false ? 0 : 1,
+  );
+}
+
+export function deleteIntegration(complexId: number, provider: IntegrationProvider): void {
+  run(
+    "DELETE FROM integrations WHERE complex_id = ? AND provider = ?",
+    complexId,
+    provider,
+  );
+}
+
+/* --------------------------------------------------------- notifications */
+
+export function createNotification(input: {
+  complexId: number;
+  bookingId?: number | null;
+  channel: string;
+  recipient?: string | null;
+  body: string;
+  status: NotificationRow["status"];
+  error?: string | null;
+  sentAt?: string | null;
+}): number {
+  return insert(
+    `INSERT INTO notifications
+      (complex_id, booking_id, channel, recipient, body, status, error, sent_at)
+     VALUES (?, ?, ?, ?, ?, ?, ?, ?)`,
+    input.complexId,
+    input.bookingId ?? null,
+    input.channel,
+    input.recipient ?? null,
+    input.body,
+    input.status,
+    input.error ?? null,
+    input.sentAt ?? null,
+  );
+}
+
+export function listNotifications(
+  complexId: number,
+  limit = 20,
+): NotificationRow[] {
+  return all<NotificationRow>(
+    "SELECT * FROM notifications WHERE complex_id = ? ORDER BY id DESC LIMIT ?",
+    complexId,
+    limit,
   );
 }

@@ -18,6 +18,7 @@ const DB_PATH =
 
 declare global {
   var __canchaDb: DatabaseSync | undefined;
+  var __canchaDbCheckedAt: number | undefined;
 }
 
 function migrate(db: DatabaseSync) {
@@ -42,10 +43,27 @@ function connect(): DatabaseSync {
   return database;
 }
 
+const MIGRATION_CHECK_INTERVAL_MS = 60_000;
+
 export function getDb(): DatabaseSync {
   if (!globalThis.__canchaDb) {
     globalThis.__canchaDb = connect();
+    globalThis.__canchaDbCheckedAt = Date.now();
+    return globalThis.__canchaDb;
   }
+
+  // A running server picks up new migrations without a restart, at most once
+  // per minute so the extra query is not paid on every request.
+  const lastCheck = globalThis.__canchaDbCheckedAt ?? 0;
+  if (Date.now() - lastCheck > MIGRATION_CHECK_INTERVAL_MS) {
+    globalThis.__canchaDbCheckedAt = Date.now();
+    try {
+      migrate(globalThis.__canchaDb);
+    } catch (error) {
+      console.error("[db] migration check failed", error);
+    }
+  }
+
   return globalThis.__canchaDb;
 }
 
