@@ -18,7 +18,13 @@ import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
 import { FieldError, Input, Label } from "@/components/ui/input";
 import { cn } from "@/lib/utils";
-import { buildSlots, depositFor, formatMoney, minutesToLabel } from "@/lib/scheduling";
+import {
+  buildSlots,
+  depositFor,
+  formatMoney,
+  isActiveState,
+  minutesToLabel,
+} from "@/lib/scheduling";
 import { createBookingAction, type BookingState } from "@/app/[locale]/actions/booking";
 
 export type PublicCourt = {
@@ -37,6 +43,7 @@ export type PublicBookingRow = {
   start_min: number;
   duration_min: number;
   status: "confirmed" | "cancelled";
+  state: string;
 };
 
 export type PublicComplex = {
@@ -100,7 +107,7 @@ export function PublicBooking({
       court: { id: court.id, duration_min: court.durationMin },
       date,
       hours,
-      bookings: bookings.filter((b) => b.status === "confirmed"),
+      bookings: bookings.filter((b) => isActiveState(b.state)),
     });
   }, [court, complex, date, hours, bookings]);
   const freeSlots = slots.filter((slot) => slot.available);
@@ -192,7 +199,7 @@ export function PublicBooking({
                 court: { id: item.id, duration_min: item.durationMin },
                 date,
                 hours,
-                bookings: bookings.filter((b) => b.status === "confirmed"),
+                bookings: bookings.filter((b) => isActiveState(b.state)),
               }).filter((slot) => slot.available).length;
 
               return (

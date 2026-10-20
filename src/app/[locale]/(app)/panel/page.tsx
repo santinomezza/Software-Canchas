@@ -9,7 +9,13 @@ import { HoursForm } from "@/components/app/hours-form";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
 import { Link } from "@/i18n/navigation";
-import { addDays, formatMoney, minutesToLabel, todayIn } from "@/lib/scheduling";
+import {
+  addDays,
+  formatMoney,
+  isActiveState,
+  minutesToLabel,
+  todayIn,
+} from "@/lib/scheduling";
 
 type PageParams = {
   params: Promise<{ locale: string }>;
@@ -61,13 +67,13 @@ export default async function PanelPage({ params, searchParams }: PageParams) {
   const today = todayIn(complex.timezone);
   const bookings = listBookings(complex.id, { from: today, to: addDays(today, 60) });
   const upcoming = bookings
-    .filter((b) => b.status === "confirmed")
+    .filter((b) => isActiveState(b.state))
     .reverse()
     .slice(0, 8);
 
   const deposits = bookings.reduce((acc, b) => acc + b.deposit_cents, 0);
   const total = bookings.reduce((acc, b) => acc + b.amount_cents, 0);
-  const todayCount = bookings.filter((b) => b.date === today && b.status === "confirmed").length;
+  const todayCount = bookings.filter((b) => b.date === today && isActiveState(b.state)).length;
 
   /* ------------------------------------------------- missing courts/hours */
   const step = courts.length === 0 ? "courts" : hours.length === 0 ? "hours" : "done";

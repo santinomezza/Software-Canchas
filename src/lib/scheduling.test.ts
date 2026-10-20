@@ -39,6 +39,7 @@ function booking(overrides: Partial<BookingRow> = {}): BookingRow {
     amount_cents: 10000,
     deposit_cents: 5000,
     status: "confirmed",
+    state: "CONFIRMED",
     payment_status: "pending",
     payment_method: null,
     external_ref: null,

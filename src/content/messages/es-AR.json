@@ -650,7 +650,19 @@
     "notificationTitle": "Avisos enviados",
     "notificationEmpty": "Todavía no enviaste ningún aviso.",
     "notificationSent": "Enviado",
-    "notificationFailed": "Falló"
+    "notificationFailed": "Falló",
+    "waAppSecret": "App secret de Meta (opcional)",
+    "waAppSecretPlaceholder": "Tu app secret",
+    "waAppSecretHint": "Con esto el sistema verifica la firma de cada mensaje que entra. Si lo dejás vacío, el webhook acepta mensajes sin verificar la firma.",
+    "staffTitle": "Números del equipo",
+    "staffLead": "Los números de acá pueden administrar turnos, consultar disponibilidad y cancelar reservas desde WhatsApp.",
+    "staffPhone": "Número de WhatsApp",
+    "staffRole": "Rol",
+    "staffAdd": "Autorizar número",
+    "staffRemove": "Quitar",
+    "staffEmpty": "Todavía no autorizaste ningún número.",
+    "botTitle": "Bot de WhatsApp",
+    "botLead": "Con WhatsApp configurado, el bot atiende reservas, confirma turnos y avisa cuando se paga una seña."
   },
   "public": {
     "eyebrow": "Reservas online",

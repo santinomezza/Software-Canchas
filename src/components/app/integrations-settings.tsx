@@ -241,6 +241,18 @@ function WhatsAppCard({ status }: { status: WhatsAppStatus }) {
           <p className="mt-1.5 text-xs text-ink-3">{t("waTokenHint")}</p>
         </div>
 
+        <div>
+          <Label htmlFor="wa-app-secret">{t("waAppSecret")}</Label>
+          <Input
+            id="wa-app-secret"
+            name="app_secret"
+            type="password"
+            placeholder={t("waAppSecretPlaceholder")}
+            autoComplete="off"
+          />
+          <p className="mt-1.5 text-xs text-ink-3">{t("waAppSecretHint")}</p>
+        </div>
+
         {state?.error ? <FieldError>{state.error}</FieldError> : null}
         {state?.ok === "saved" ? (
           <p role="status" className="text-sm text-accent">

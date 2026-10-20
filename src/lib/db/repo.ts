@@ -1,6 +1,7 @@
 import { all, insert, one, run, transaction } from "./index";
 import type {
   BookingRow,
+  BookingState,
   CashMovementRow,
   ComplexImageRow,
   ComplexRow,
@@ -277,7 +278,8 @@ export function listBookingsForSlot(
 ): BookingRow[] {
   return all<BookingRow>(
     `SELECT * FROM bookings
-     WHERE complex_id = ? AND court_id = ? AND date = ? AND status = 'confirmed'`,
+     WHERE complex_id = ? AND court_id = ? AND date = ?
+       AND state IN ('HOLD', 'PENDING_PAYMENT', 'CONFIRMED')`,
     complexId,
     courtId,
     date,
@@ -286,6 +288,31 @@ export function listBookingsForSlot(
 
 export function getBooking(id: number): BookingRow | undefined {
   return one<BookingRow>("SELECT * FROM bookings WHERE id = ?", id);
+}
+
+/** All bookings of a complex for a given date, whatever their state. */
+export function listBookingsByDate(complexId: number, date: string): BookingRow[] {
+  return all<BookingRow>(
+    "SELECT * FROM bookings WHERE complex_id = ? AND date = ? ORDER BY start_min ASC",
+    complexId,
+    date,
+  );
+}
+
+/** The bookings a phone number made on a complex, from a date onwards. */
+export function listBookingsByPhone(
+  complexId: number,
+  phone: string,
+  fromDate: string,
+): BookingRow[] {
+  return all<BookingRow>(
+    `SELECT * FROM bookings
+     WHERE complex_id = ? AND player_phone = ? AND date >= ?
+     ORDER BY date DESC, start_min DESC`,
+    complexId,
+    phone,
+    fromDate,
+  );
 }
 
 export function createBooking(input: {
@@ -303,13 +330,18 @@ export function createBooking(input: {
   paymentMethod?: string | null;
   externalRef?: string | null;
   notes?: string | null;
+  /** Ciclo de vida del turno. Por defecto, confirmado. */
+  state?: BookingState;
+  expiresAt?: string | null;
+  externalReference?: string | null;
 }): BookingRow {
   const id = insert(
     `INSERT INTO bookings
       (complex_id, court_id, date, start_min, duration_min, player_name,
        player_email, player_phone, amount_cents, deposit_cents,
-       status, payment_status, payment_method, external_ref, notes)
-     VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, 'confirmed', ?, ?, ?, ?)`,
+       status, state, payment_status, payment_method, external_ref, notes,
+       expires_at, external_reference)
+     VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, 'confirmed', ?, ?, ?, ?, ?, ?, ?)`,
     input.complexId,
     input.courtId,
     input.date,
@@ -320,12 +352,64 @@ export function createBooking(input: {
     input.playerPhone ?? null,
     input.amountCents,
     input.depositCents,
+    input.state ?? "CONFIRMED",
     input.paymentStatus ?? "pending",
     input.paymentMethod ?? null,
     input.externalRef ?? null,
     input.notes ?? null,
+    input.expiresAt ?? null,
+    input.externalReference ?? null,
   );
   return getBooking(id)!;
+}
+
+/** Moves a booking to another state of its lifecycle. */
+export function setBookingState(
+  id: number,
+  state: BookingState,
+  extra: { expiresAt?: string | null; externalReference?: string | null } = {},
+): void {
+  run(
+    "UPDATE bookings SET state = ?, expires_at = COALESCE(?, expires_at), external_reference = COALESCE(?, external_reference), updated_at = datetime('now') WHERE id = ?",
+    state,
+    extra.expiresAt ?? null,
+    extra.externalReference ?? null,
+    id,
+  );
+}
+
+export function findBookingByExternalReference(
+  complexId: number,
+  externalReference: string,
+): BookingRow | undefined {
+  return one<BookingRow>(
+    "SELECT * FROM bookings WHERE complex_id = ? AND external_reference = ?",
+    complexId,
+    externalReference,
+  );
+}
+
+/** Holds that ran out and have to be released. */
+export function listExpiredHolds(now = new Date().toISOString()): BookingRow[] {
+  return all<BookingRow>(
+    "SELECT * FROM bookings WHERE state = 'HOLD' AND expires_at IS NOT NULL AND expires_at <= ?",
+    now,
+  );
+}
+
+/** Expires the holds that ran out. Returns the ids that were expired. */
+export function expireStaleHolds(now = new Date().toISOString()): number[] {
+  const stale = all<{ id: number }>(
+    "SELECT id FROM bookings WHERE state = 'HOLD' AND expires_at IS NOT NULL AND expires_at <= ?",
+    now,
+  );
+  for (const booking of stale) {
+    run(
+      "UPDATE bookings SET state = 'EXPIRED', updated_at = datetime('now') WHERE id = ?",
+      booking.id,
+    );
+  }
+  return stale.map((b) => b.id);
 }
 
 export function cancelBooking(id: number): void {
@@ -825,4 +909,326 @@ export function upsertService(
 
 export function deleteService(id: number, complexId: number): void {
   run("DELETE FROM complex_services WHERE id = ? AND complex_id = ?", id, complexId);
+}
+
+/* ------------------------------------------------------------------- bot */
+
+export type ConversationRow = {
+  phone: string;
+  complex_id: number;
+  state: string;
+  context: string;
+  last_message_at: string | null;
+  updated_at: string;
+};
+
+export function getConversation(phone: string): ConversationRow | undefined {
+  return one<ConversationRow>("SELECT * FROM conversations WHERE phone = ?", phone);
+}
+
+export function saveConversation(input: {
+  phone: string;
+  complexId: number;
+  state: string;
+  context: unknown;
+}): void {
+  const context = JSON.stringify(input.context ?? {});
+  const now = new Date().toISOString();
+
+  const existing = getConversation(input.phone);
+  if (existing) {
+    run(
+      "UPDATE conversations SET complex_id = ?, state = ?, context = ?, last_message_at = ?, updated_at = datetime('now') WHERE phone = ?",
+      input.complexId,
+      input.state,
+      context,
+      now,
+      input.phone,
+    );
+    return;
+  }
+
+  insert(
+    "INSERT INTO conversations (phone, complex_id, state, context, last_message_at) VALUES (?, ?, ?, ?, ?)",
+    input.phone,
+    input.complexId,
+    input.state,
+    context,
+    now,
+  );
+}
+
+export function deleteConversation(phone: string): void {
+  run("DELETE FROM conversations WHERE phone = ?", phone);
+}
+
+export function upsertCustomer(input: {
+  complexId: number;
+  phone: string;
+  name?: string | null;
+  optIn?: boolean;
+}): void {
+  run(
+    `INSERT INTO customers (complex_id, phone, name, opt_in) VALUES (?, ?, ?, ?)
+     ON CONFLICT(complex_id, phone) DO UPDATE SET name = COALESCE(excluded.name, name), opt_in = excluded.opt_in`,
+    input.complexId,
+    input.phone,
+    input.name ?? null,
+    input.optIn === false ? 0 : 1,
+  );
+}
+
+export function getCustomer(
+  complexId: number,
+  phone: string,
+): { phone: string; name: string | null; opt_in: number } | undefined {
+  return one(
+    "SELECT phone, name, opt_in FROM customers WHERE complex_id = ? AND phone = ?",
+    complexId,
+    phone,
+  );
+}
+
+export function listStaffPhones(
+  complexId: number,
+): { phone: string; role: string; events: string }[] {
+  return all(
+    "SELECT phone, role, events FROM staff_phones WHERE complex_id = ?",
+    complexId,
+  );
+}
+
+export function upsertStaffPhone(input: {
+  complexId: number;
+  phone: string;
+  role?: string;
+  events?: string[];
+}): void {
+  run(
+    `INSERT INTO staff_phones (complex_id, phone, role, events) VALUES (?, ?, ?, ?)
+     ON CONFLICT(complex_id, phone) DO UPDATE SET role = excluded.role, events = excluded.events`,
+    input.complexId,
+    input.phone,
+    input.role ?? "STAFF",
+    JSON.stringify(input.events ?? []),
+  );
+}
+
+export function removeStaffPhone(complexId: number, phone: string): void {
+  run("DELETE FROM staff_phones WHERE complex_id = ? AND phone = ?", complexId, phone);
+}
+
+export function isStaffPhone(complexId: number, phone: string): boolean {
+  return !!one(
+    "SELECT phone FROM staff_phones WHERE complex_id = ? AND phone = ?",
+    complexId,
+    phone,
+  );
+}
+
+/* --------------------------------------------------------------- payments */
+
+export type PaymentRow = {
+  id: number;
+  complex_id: number;
+  booking_id: number | null;
+  mp_payment_id: string;
+  status: string;
+  amount_cents: number;
+  raw: string | null;
+  created_at: string;
+  updated_at: string;
+};
+
+/** Inserts a payment ignoring duplicates: the same mp_payment_id only lands once. */
+export function recordPayment(input: {
+  complexId: number;
+  bookingId: number | null;
+  mpPaymentId: string;
+  status: string;
+  amountCents: number;
+  raw?: string | null;
+}): "inserted" | "duplicate" {
+  const existing = one<PaymentRow>(
+    "SELECT * FROM payments WHERE mp_payment_id = ?",
+    input.mpPaymentId,
+  );
+  if (existing) return "duplicate";
+
+  insert(
+    `INSERT INTO payments (complex_id, booking_id, mp_payment_id, status, amount_cents, raw)
+     VALUES (?, ?, ?, ?, ?, ?)`,
+    input.complexId,
+    input.bookingId,
+    input.mpPaymentId,
+    input.status,
+    input.amountCents,
+    input.raw ?? null,
+  );
+  return "inserted";
+}
+
+export function updatePaymentStatus(
+  mpPaymentId: string,
+  status: string,
+  amountCents?: number,
+  raw?: string | null,
+): void {
+  run(
+    "UPDATE payments SET status = ?, amount_cents = COALESCE(?, amount_cents), raw = COALESCE(?, raw), updated_at = datetime('now') WHERE mp_payment_id = ?",
+    status,
+    amountCents ?? null,
+    raw ?? null,
+    mpPaymentId,
+  );
+}
+
+export function getPayment(mpPaymentId: string): PaymentRow | undefined {
+  return one<PaymentRow>("SELECT * FROM payments WHERE mp_payment_id = ?", mpPaymentId);
+}
+
+/* ----------------------------------------------------------- message log */
+
+export function logMessage(input: {
+  complexId: number;
+  externalId?: string | null;
+  direction: "in" | "out";
+  channel?: string;
+  phone?: string | null;
+  template?: string | null;
+  body?: string | null;
+  status?: string;
+  error?: string | null;
+}): void {
+  run(
+    `INSERT INTO message_log (complex_id, external_id, direction, channel, phone, template, body, status, error)
+     VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?)`,
+    input.complexId,
+    input.externalId ?? null,
+    input.direction,
+    input.channel ?? "whatsapp",
+    input.phone ?? null,
+    input.template ?? null,
+    input.body ?? null,
+    input.status ?? "sent",
+    input.error ?? null,
+  );
+}
+
+/** True when the message was already processed (idempotencia del webhook). */
+export function messageAlreadySeen(externalId: string): boolean {
+  return !!one("SELECT id FROM message_log WHERE external_id = ?", externalId);
+}
+
+/* -------------------------------------------------------------- audit log */
+
+export function audit(input: {
+  complexId: number;
+  actor: string;
+  action: string;
+  target?: string | null;
+  detail?: string | null;
+}): void {
+  run(
+    "INSERT INTO audit_log (complex_id, actor, action, target, detail) VALUES (?, ?, ?, ?, ?)",
+    input.complexId,
+    input.actor,
+    input.action,
+    input.target ?? null,
+    input.detail ?? null,
+  );
+}
+
+/* ------------------------------------------------------------------ jobs */
+
+export type JobRow = {
+  id: number;
+  complex_id: number;
+  type: string;
+  payload: string;
+  status: string;
+  attempts: number;
+  run_at: string;
+  last_error: string | null;
+};
+
+export function enqueueJob(input: {
+  complexId: number;
+  type: string;
+  payload?: unknown;
+  runAt?: Date;
+}): number {
+  return insert(
+    "INSERT INTO jobs (complex_id, type, payload, run_at) VALUES (?, ?, ?, ?)",
+    input.complexId,
+    input.type,
+    JSON.stringify(input.payload ?? {}),
+    (input.runAt ?? new Date()).toISOString(),
+  );
+}
+
+export function claimJobs(limit = 10): JobRow[] {
+  const jobs = all<JobRow>(
+    "SELECT * FROM jobs WHERE status = 'pending' AND run_at <= ? ORDER BY id ASC LIMIT ?",
+    new Date().toISOString(),
+    limit,
+  );
+
+  for (const job of jobs) {
+    run(
+      "UPDATE jobs SET status = 'running', attempts = attempts + 1, updated_at = datetime('now') WHERE id = ?",
+      job.id,
+    );
+  }
+
+  return jobs;
+}
+
+export function completeJob(id: number): void {
+  run("UPDATE jobs SET status = 'done', updated_at = datetime('now') WHERE id = ?", id);
+}
+
+export function failJob(id: number, error: string, retryAt: Date): void {
+  run(
+    "UPDATE jobs SET status = 'pending', last_error = ?, run_at = ?, updated_at = datetime('now') WHERE id = ?",
+    error.slice(0, 400),
+    retryAt.toISOString(),
+    id,
+  );
+}
+
+/* --------------------------------------------------------- blocked slots */
+
+export function blockSlot(input: {
+  complexId: number;
+  courtId: number;
+  date: string;
+  startMin: number;
+  durationMin: number;
+  reason?: string | null;
+}): void {
+  run(
+    "INSERT INTO blocked_slots (complex_id, court_id, date, start_min, duration_min, reason) VALUES (?, ?, ?, ?, ?, ?)",
+    input.complexId,
+    input.courtId,
+    input.date,
+    input.startMin,
+    input.durationMin,
+    input.reason ?? null,
+  );
+}
+
+export function listBlockedSlots(
+  complexId: number,
+  date: string,
+): { court_id: number; start_min: number; duration_min: number }[] {
+  return all(
+    "SELECT court_id, start_min, duration_min FROM blocked_slots WHERE complex_id = ? AND date = ?",
+    complexId,
+    date,
+  );
+}
+
+export function removeBlockedSlot(id: number, complexId: number): void {
+  run("DELETE FROM blocked_slots WHERE id = ? AND complex_id = ?", id, complexId);
 }

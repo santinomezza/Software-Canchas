@@ -20,6 +20,8 @@ export type WhatsAppSettings = {
   phone?: string;
   /** phone_number_id de Meta. */
   phoneNumberId?: string;
+  /** App secret de Meta, cifrado: sirve para verificar la firma del webhook. */
+  appSecret?: string | null;
 };
 
 export type WhatsAppConfig = {
@@ -41,7 +43,16 @@ export function resolveWhatsApp(complexId: number): WhatsAppConfig {
     } catch {
       settings = {};
     }
-    if (secret) return { token: secret, settings, source: "complex" };
+    if (secret) {
+      return {
+        token: secret,
+        source: "complex",
+        settings: {
+          ...settings,
+          appSecret: settings.appSecret ? decryptSecret(settings.appSecret) : null,
+        },
+      };
+    }
   }
 
   return {

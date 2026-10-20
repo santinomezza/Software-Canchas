@@ -92,7 +92,7 @@ export function AgendaView({
     setEditorOpen(true);
   }
 
-  const cancelled = bookings.filter((b) => b.status === "cancelled");
+  const cancelled = bookings.filter((b) => b.state === "CANCELLED");
 
   return (
     <>

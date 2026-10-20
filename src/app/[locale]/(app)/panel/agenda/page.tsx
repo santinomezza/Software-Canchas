@@ -39,6 +39,7 @@ export default async function AgendaPage({ params, searchParams }: PageParams) {
       date: booking.date,
       startMin: booking.start_min,
       durationMin: booking.duration_min,
+      state: booking.state,
       playerName: booking.player_name,
       playerEmail: booking.player_email,
       playerPhone: booking.player_phone,

@@ -3,7 +3,13 @@
 import { revalidatePath } from "next/cache";
 import { z } from "zod";
 import { requireMemberAction } from "@/lib/auth";
-import { deleteIntegration, upsertIntegration } from "@/lib/db/repo";
+import {
+  deleteIntegration,
+  getIntegration,
+  removeStaffPhone,
+  upsertIntegration,
+  upsertStaffPhone,
+} from "@/lib/db/repo";
 import { encryptSecret, maskSecret } from "@/lib/crypto";
 import { verifyToken } from "@/lib/integrations/mercado-pago";
 import { normalizePhone, resolveWhatsApp } from "@/lib/integrations/whatsapp";
@@ -26,6 +32,7 @@ const waSchema = z.object({
   phone: z.string().trim().min(6, "Escribí tu número con prefijo internacional"),
   phone_number_id: z.string().trim().min(4, "Escribí el phone_number_id de Meta"),
   token: z.string().trim().min(20, "Pegá el token permanente de WhatsApp"),
+  app_secret: z.string().trim().optional(),
 });
 
 export async function saveMercadoPagoAction(
@@ -72,6 +79,7 @@ export async function saveWhatsAppAction(
     phone: formData.get("phone"),
     phone_number_id: formData.get("phone_number_id"),
     token: formData.get("token"),
+    app_secret: formData.get("app_secret") ?? "",
   });
 
   if (!parsed.success) {
@@ -83,6 +91,10 @@ export async function saveWhatsAppAction(
     return { error: "El número no parece válido. Usá formato internacional." };
   }
 
+  const previous = getIntegration(complex.id, "whatsapp");
+  const previousSettings = previous ? parseSettings(previous.settings) : {};
+  const appSecret = String(parsed.data.app_secret ?? "").trim();
+
   upsertIntegration({
     complexId: complex.id,
     provider: "whatsapp",
@@ -90,12 +102,56 @@ export async function saveWhatsAppAction(
     settings: JSON.stringify({
       phone,
       phoneNumberId: parsed.data.phone_number_id,
+      // El app secret sirve para verificar la firma del webhook.
+      appSecret: appSecret ? encryptSecret(appSecret) : previousSettings.appSecret ?? null,
     }),
     enabled: true,
   });
 
+  // El número del administrador es también el que autoriza los comandos.
+  upsertStaffPhone({ complexId: complex.id, phone, role: "OWNER" });
+
   revalidatePath("/panel/configuracion");
   return { ok: "saved", masked: maskSecret(parsed.data.token) };
+}
+
+/** Números del equipo autorizados a administrar desde WhatsApp. */
+export async function saveStaffPhoneAction(
+  _prev: IntegrationState,
+  formData: FormData,
+): Promise<IntegrationState> {
+  const { complex } = await requireMemberAction("team.write", "/panel/configuracion");
+
+  const raw = String(formData.get("phone") ?? "").trim();
+  const phone = normalizePhone(raw);
+  if (phone.length < 10) return { error: "El número no parece válido." };
+
+  const role = String(formData.get("role") ?? "STAFF");
+
+  upsertStaffPhone({ complexId: complex.id, phone, role });
+  revalidatePath("/panel/configuracion");
+  return { ok: "saved" };
+}
+
+export async function removeStaffPhoneAction(formData: FormData): Promise<void> {
+  const { complex } = await requireMemberAction("team.write", "/panel/configuracion");
+
+  const phone = normalizePhone(String(formData.get("phone") ?? ""));
+  removeStaffPhone(complex.id, phone);
+  revalidatePath("/panel/configuracion");
+}
+
+function parseSettings(value: string): {
+  phone?: string;
+  phoneNumberId?: string;
+  appSecret?: string | null;
+  webhookSecret?: string | null;
+} {
+  try {
+    return JSON.parse(value) as ReturnType<typeof parseSettings>;
+  } catch {
+    return {};
+  }
 }
 
 export async function testWhatsAppAction(

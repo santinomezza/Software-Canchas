@@ -20,12 +20,13 @@ export type AgendaBooking = {
   date: string;
   startMin: number;
   durationMin: number;
+  status: "confirmed" | "cancelled";
+  state: string;
   playerName: string;
   playerEmail: string | null;
   playerPhone: string | null;
   amountCents: number;
   depositCents: number;
-  status: "confirmed" | "cancelled";
   paymentStatus: string;
   paymentMethod: string;
   concept: string;

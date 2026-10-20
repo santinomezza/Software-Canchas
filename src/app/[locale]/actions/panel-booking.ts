@@ -313,7 +313,7 @@ export async function cancelPanelBookingAction(
   if (!booking || booking.complex_id !== complex.id) {
     return { error: "Turno inexistente." };
   }
-  if (booking.status === "cancelled") {
+  if (booking.state === "CANCELLED") {
     return { error: "El turno ya estaba cancelado." };
   }
 

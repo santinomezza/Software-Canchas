@@ -1,4 +1,9 @@
-import type { BookingRow } from "@/lib/db/schema";
+import type { BookingRow, BookingState } from "@/lib/db/schema";
+
+/** True when the booking still occupies the court. */
+export function isActiveState(state: BookingState | string | undefined): boolean {
+  return state === "HOLD" || state === "PENDING_PAYMENT" || state === "CONFIRMED";
+}
 
 /**
  * Scheduling engine.

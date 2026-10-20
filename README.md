@@ -154,9 +154,9 @@ Guía completa: [`docs/DESIGN-SYSTEM.md`](docs/DESIGN-SYSTEM.md).
 ## QA
 
 ```bash
-npm test                    # 19 unit tests (scheduling + auth)
+npm test                    # 47 unit tests (scheduling, auth, bot)
 npm run qa:e2e              # flujo de onboarding: alta → complejo → cancha → reserva
-node scripts/qa/e2e-panel.mjs   # agenda, edición de turno, caja y equipo
+node scripts/qa/e2e-panel.mjs   # agenda, caja, empleados, integraciones, contenido
 npm run qa:capture          # capturas en 3 viewports + conteo de errores de consola
 node scripts/qa/lighthouse.mjs  # Lighthouse + axe-core
 ```
@@ -175,6 +175,30 @@ node scripts/qa/capture-public.mjs    # captura la página del cliente
 node scripts/qa/capture-content.mjs   # captura galería, servicios y mapa
 node scripts/qa/lighthouse.mjs        # Lighthouse + axe-core
 ```
+
+## Bot de WhatsApp
+
+El bot atiende **desde el mismo número del complejo** cuatro cosas:
+
+| Función | Quién |
+|---|---|
+| **Reservas por WhatsApp** | El cliente escribe "quiero reservar una cancha" y el bot lo guía con botones y listas: deporte → fecha → horario → cancha → resumen → link de pago |
+| **Confirmación al cliente** | Al registrarse el turno, el cliente recibe por WhatsApp todos los datos y el link para pagar la seña |
+| **Avisos al administrador** | Cada reserva nueva y cada pago acreditado le llegan a su propio chat |
+| **Administración** | El equipo consulta "turnos hoy", "disponibles", "horarios" y cancela reservas (siempre con confirmación) |
+
+Además, el turno tiene un ciclo de vida real: `HOLD` (10 minutos mientras se
+paga la seña) → `PENDING_PAYMENT` → `CONFIRMED`, con `CANCELLED`, `EXPIRED` y
+`NO_SHOW`. Si el HOLD vence, el horario se libera solo y se avisa a los dos.
+
+El núcleo del bot (`src/lib/bot/**`) es TypeScript puro y se comunica con el
+mundo por puertos: WhatsApp es un adaptador, no el núcleo, así que el motor se
+levanta sin cambios en Fastify o NestJS.
+
+Guía completa de alta (Meta for Developers, Mercado Pago, plantillas y
+plantillas de mensaje): [`docs/WHATSAPP-BOT.md`](docs/WHATSAPP-BOT.md).
+Decisiones de arquitectura y camino a la pila pedida:
+[`docs/ARQUITECTURA.md`](docs/ARQUITECTURA.md).
 
 ## Roles
 

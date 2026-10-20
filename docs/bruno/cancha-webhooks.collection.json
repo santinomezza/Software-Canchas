@@ -1,0 +1,91 @@
+{
+  "info": {
+    "name": "cancha — webhooks",
+    "description": "Webhooks de WhatsApp y Mercado Pago. La colección de Bruno exportada también se puede importar en Postman.",
+    "schema": "https://schema.getpostman.com/json/collection/v2.1.0/collection.json"
+  },
+  "variable": [
+    { "key": "baseUrl", "value": "http://localhost:3000" },
+    { "key": "complexId", "value": "1" },
+    { "key": "verifyToken", "value": "token-de-verificacion" },
+    { "key": "phoneNumberId", "value": "123456789" }
+  ],
+  "item": [
+    {
+      "name": "WhatsApp — verificar webhook",
+      "request": {
+        "method": "GET",
+        "url": {
+          "raw": "{{baseUrl}}/api/whatsapp/webhook?hub.mode=subscribe&hub.verify_token={{verifyToken}}&hub.challenge=1234",
+          "host": ["{{baseUrl}}"],
+          "path": ["api", "whatsapp", "webhook"],
+          "query": [
+            { "key": "hub.mode", "value": "subscribe" },
+            { "key": "hub.verify_token", "value": "{{verifyToken}}" },
+            { "key": "hub.challenge", "value": "1234" }
+          ]
+        }
+      }
+    },
+    {
+      "name": "WhatsApp — mensaje de texto",
+      "request": {
+        "method": "POST",
+        "header": [{ "key": "Content-Type", "value": "application/json" }],
+        "body": {
+          "mode": "raw",
+          "raw": "{\n  \"object\": \"whatsapp_business_account\",\n  \"entry\": [{\n    \"id\": \"WABA_ID\",\n    \"changes\": [{\n      \"field\": \"messages\",\n      \"value\": {\n        \"messaging_product\": \"whatsapp\",\n        \"metadata\": { \"display_phone_number\": \"5493510000000\", \"phone_number_id\": \"{{phoneNumberId}}\" },\n        \"contacts\": [{ \"profile\": { \"name\": \"María\" }, \"wa_id\": \"5493512345678\" }],\n        \"messages\": [{ \"id\": \"wamid.TEST1\", \"from\": \"5493512345678\", \"type\": \"text\", \"timestamp\": \"1770000000\", \"text\": { \"body\": \"hola\" } }]\n      }\n    }]\n  }]\n}"
+        },
+        "options": { "raw": { "language": "json" } }
+      }
+    },
+    {
+      "name": "WhatsApp — respuesta a un botón",
+      "request": {
+        "method": "POST",
+        "header": [{ "key": "Content-Type", "value": "application/json" }],
+        "body": {
+          "mode": "raw",
+          "raw": "{\n  \"entry\": [{\n    \"changes\": [{\n      \"value\": {\n        \"metadata\": { \"phone_number_id\": \"{{phoneNumberId}}\" },\n        \"contacts\": [{ \"profile\": { \"name\": \"María\" }, \"wa_id\": \"5493512345678\" }],\n        \"messages\": [{\n          \"id\": \"wamid.TEST2\",\n          \"from\": \"5493512345678\",\n          \"type\": \"interactive\",\n          \"timestamp\": \"1770000000\",\n          \"interactive\": { \"type\": \"button_reply\", \"button_reply\": { \"id\": \"confirm\", \"title\": \"Confirmar\" } }\n        }]\n      }\n    }]\n  }]\n}"
+        },
+        "options": { "raw": { "language": "json" } }
+      }
+    },
+    {
+      "name": "WhatsApp — mensaje duplicado (idempotencia)",
+      "request": {
+        "method": "POST",
+        "header": [{ "key": "Content-Type", "value": "application/json" }],
+        "body": {
+          "mode": "raw",
+          "raw": "{\n  \"entry\": [{\n    \"changes\": [{\n      \"value\": {\n        \"metadata\": { \"phone_number_id\": \"{{phoneNumberId}}\" },\n        \"contacts\": [{ \"profile\": { \"name\": \"María\" }, \"wa_id\": \"5493512345678\" }],\n        \"messages\": [{ \"id\": \"wamid.TEST1\", \"from\": \"5493512345678\", \"type\": \"text\", \"timestamp\": \"1770000000\", \"text\": { \"body\": \"hola\" } }]\n      }\n    }]\n  }]\n}"
+        },
+        "options": { "raw": { "language": "json" } }
+      }
+    },
+    {
+      "name": "Mercado Pago — pago aprobado",
+      "request": {
+        "method": "POST",
+        "header": [{ "key": "Content-Type", "value": "application/json" }],
+        "body": {
+          "mode": "raw",
+          "raw": "{\n  \"id\": \"123456\",\n  \"type\": \"payment\",\n  \"action\": \"payment.updated\",\n  \"data\": { \"id\": \"13000000000000000\" },\n  \"date_created\": \"2026-03-02T12:00:00.000-04:00\",\n  \"live_mode\": false\n}"
+        },
+        "options": { "raw": { "language": "json" } }
+      }
+    },
+    {
+      "name": "Mercado Pago — webhook sin complejo (debe dar 400)",
+      "request": {
+        "method": "POST",
+        "header": [{ "key": "Content-Type", "value": "application/json" }],
+        "body": {
+          "mode": "raw",
+          "raw": "{\n  \"type\": \"payment\",\n  \"data\": { \"id\": \"13000000000000000\" }\n}"
+        },
+        "options": { "raw": { "language": "json" } }
+      }
+    }
+  ]
+}

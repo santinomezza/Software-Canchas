@@ -621,6 +621,21 @@ const messages: Messages = {
     waPhoneId: "phone_number_id",
     waToken: "Token permanente do WhatsApp",
     waTokenHint: "Em Meta for Developers → WhatsApp → Configuração da API → Token permanente.",
+    waAppSecret: "App secret da Meta (opcional)",
+    waAppSecretPlaceholder: "Seu app secret",
+    waAppSecretHint:
+      "Com isso o sistema verifica a assinatura de cada mensagem que entra. Se deixar vazio, o webhook aceita mensagens sem verificar a assinatura.",
+    staffTitle: "Números da equipe",
+    staffLead:
+      "Os números aqui podem administrar turnos, consultar disponibilidade e cancelar reservas pelo WhatsApp.",
+    staffPhone: "Número de WhatsApp",
+    staffRole: "Perfil",
+    staffAdd: "Autorizar número",
+    staffRemove: "Remover",
+    staffEmpty: "Você ainda não autorizou nenhum número.",
+    botTitle: "Bot de WhatsApp",
+    botLead:
+      "Com o WhatsApp configurado, o bot atende reservas, confirma turnos e avisa quando o sinal é pago.",
     waConnect: "Conectar WhatsApp",
     waUpdate: "Atualizar WhatsApp",
     waTest: "Enviar mensagem de teste",

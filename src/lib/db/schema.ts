@@ -209,12 +209,157 @@ CREATE TABLE IF NOT EXISTS complex_services (
 CREATE INDEX IF NOT EXISTS idx_services_complex ON complex_services(complex_id, position);
 `;
 
+export const MIGRATION_6 = `
+-- v6 — bot de WhatsApp: ciclo de vida de la reserva, sesiones, clientes,
+-- staff, pagos, bitácoras y cola de trabajos.
+
+-- Estados del ciclo de vida de una reserva.
+ALTER TABLE bookings ADD COLUMN state TEXT NOT NULL DEFAULT 'CONFIRMED';
+ALTER TABLE bookings ADD COLUMN expires_at TEXT;
+ALTER TABLE bookings ADD COLUMN external_reference TEXT;
+ALTER TABLE bookings ADD COLUMN blocked_slot INTEGER NOT NULL DEFAULT 0;
+
+UPDATE bookings
+SET state = CASE WHEN status = 'cancelled' THEN 'CANCELLED' ELSE 'CONFIRMED' END;
+
+-- Anti doble reserva: un único turno activo por cancha, fecha y hora.
+-- Es el equivalente SQLite del EXCLUDE USING gist de PostgreSQL.
+CREATE UNIQUE INDEX IF NOT EXISTS idx_bookings_active_slot
+  ON bookings(court_id, date, start_min)
+  WHERE state IN ('HOLD', 'PENDING_PAYMENT', 'CONFIRMED');
+
+CREATE INDEX IF NOT EXISTS idx_bookings_state ON bookings(complex_id, state);
+CREATE INDEX IF NOT EXISTS idx_bookings_external ON bookings(external_reference);
+
+-- Conversaciones del bot: una por teléfono.
+CREATE TABLE IF NOT EXISTS conversations (
+  phone            TEXT PRIMARY KEY,
+  complex_id       INTEGER NOT NULL REFERENCES complexes(id) ON DELETE CASCADE,
+  state            TEXT NOT NULL DEFAULT 'idle',
+  context          TEXT NOT NULL DEFAULT '{}',
+  last_message_at  TEXT,
+  updated_at       TEXT NOT NULL DEFAULT (datetime('now'))
+);
+CREATE INDEX IF NOT EXISTS idx_conversations_complex ON conversations(complex_id);
+
+-- Clientes que reservaron por WhatsApp (opt-in).
+CREATE TABLE IF NOT EXISTS customers (
+  complex_id  INTEGER NOT NULL REFERENCES complexes(id) ON DELETE CASCADE,
+  phone       TEXT NOT NULL,
+  name        TEXT,
+  opt_in      INTEGER NOT NULL DEFAULT 1,
+  created_at  TEXT NOT NULL DEFAULT (datetime('now')),
+  PRIMARY KEY (complex_id, phone)
+);
+
+-- Números autorizados a administrar desde WhatsApp.
+CREATE TABLE IF NOT EXISTS staff_phones (
+  complex_id  INTEGER NOT NULL REFERENCES complexes(id) ON DELETE CASCADE,
+  phone       TEXT NOT NULL,
+  role        TEXT NOT NULL DEFAULT 'STAFF',
+  events      TEXT NOT NULL DEFAULT '[]',
+  created_at  TEXT NOT NULL DEFAULT (datetime('now')),
+  PRIMARY KEY (complex_id, phone)
+);
+
+-- Pagos de Mercado Pago. mp_payment_id es único: el mismo pago nunca se
+-- procesa dos veces.
+CREATE TABLE IF NOT EXISTS payments (
+  id              INTEGER PRIMARY KEY AUTOINCREMENT,
+  complex_id      INTEGER NOT NULL REFERENCES complexes(id) ON DELETE CASCADE,
+  booking_id      INTEGER REFERENCES bookings(id) ON DELETE SET NULL,
+  mp_payment_id   TEXT NOT NULL UNIQUE,
+  status          TEXT NOT NULL DEFAULT 'pending',
+  amount_cents    INTEGER NOT NULL DEFAULT 0,
+  raw             TEXT,
+  created_at      TEXT NOT NULL DEFAULT (datetime('now')),
+  updated_at      TEXT NOT NULL DEFAULT (datetime('now'))
+);
+CREATE INDEX IF NOT EXISTS idx_payments_booking ON payments(booking_id);
+
+-- Idempotencia de los webhooks de WhatsApp y bitácora de envíos.
+CREATE TABLE IF NOT EXISTS message_log (
+  id            INTEGER PRIMARY KEY AUTOINCREMENT,
+  complex_id    INTEGER NOT NULL REFERENCES complexes(id) ON DELETE CASCADE,
+  external_id   TEXT UNIQUE,
+  direction     TEXT NOT NULL,
+  channel       TEXT NOT NULL DEFAULT 'whatsapp',
+  phone         TEXT,
+  template      TEXT,
+  body          TEXT,
+  status        TEXT NOT NULL DEFAULT 'sent',
+  error         TEXT,
+  created_at    TEXT NOT NULL DEFAULT (datetime('now'))
+);
+CREATE INDEX IF NOT EXISTS idx_message_log_complex ON message_log(complex_id, created_at DESC);
+
+-- Auditoría de las acciones administrativas.
+CREATE TABLE IF NOT EXISTS audit_log (
+  id          INTEGER PRIMARY KEY AUTOINCREMENT,
+  complex_id  INTEGER NOT NULL REFERENCES complexes(id) ON DELETE CASCADE,
+  actor       TEXT NOT NULL,
+  action      TEXT NOT NULL,
+  target      TEXT,
+  detail      TEXT,
+  created_at  TEXT NOT NULL DEFAULT (datetime('now'))
+);
+CREATE INDEX IF NOT EXISTS idx_audit_complex ON audit_log(complex_id, created_at DESC);
+
+-- Cola durable: envíos, vencimientos de HOLD y reintentos.
+CREATE TABLE IF NOT EXISTS jobs (
+  id          INTEGER PRIMARY KEY AUTOINCREMENT,
+  complex_id  INTEGER NOT NULL REFERENCES complexes(id) ON DELETE CASCADE,
+  type        TEXT NOT NULL,
+  payload     TEXT NOT NULL DEFAULT '{}',
+  status      TEXT NOT NULL DEFAULT 'pending',
+  attempts    INTEGER NOT NULL DEFAULT 0,
+  run_at      TEXT NOT NULL DEFAULT (datetime('now')),
+  last_error  TEXT,
+  created_at  TEXT NOT NULL DEFAULT (datetime('now')),
+  updated_at  TEXT NOT NULL DEFAULT (datetime('now'))
+);
+CREATE INDEX IF NOT EXISTS idx_jobs_pending ON jobs(status, run_at);
+
+-- Horarios bloqueados por el administrador.
+CREATE TABLE IF NOT EXISTS blocked_slots (
+  id          INTEGER PRIMARY KEY AUTOINCREMENT,
+  complex_id  INTEGER NOT NULL REFERENCES complexes(id) ON DELETE CASCADE,
+  court_id    INTEGER NOT NULL REFERENCES courts(id) ON DELETE CASCADE,
+  date        TEXT NOT NULL,
+  start_min   INTEGER NOT NULL,
+  duration_min INTEGER NOT NULL DEFAULT 60,
+  reason      TEXT,
+  created_at  TEXT NOT NULL DEFAULT (datetime('now'))
+);
+CREATE INDEX IF NOT EXISTS idx_blocked_slots ON blocked_slots(complex_id, date, court_id);
+`;
+
 export const MIGRATIONS: { version: number; sql: string }[] = [
   { version: 1, sql: MIGRATION_1 },
   { version: 2, sql: MIGRATION_2 },
   { version: 3, sql: MIGRATION_3 },
   { version: 4, sql: MIGRATION_4 },
   { version: 5, sql: MIGRATION_5 },
+  { version: 6, sql: MIGRATION_6 },
+];
+
+/** Estados en los que un turno ocupa la cancha. */
+export const BOOKING_STATES = [
+  "HOLD",
+  "PENDING_PAYMENT",
+  "CONFIRMED",
+  "CANCELLED",
+  "EXPIRED",
+  "NO_SHOW",
+] as const;
+
+export type BookingState = (typeof BOOKING_STATES)[number];
+
+/** Estados que bloquean el horario. */
+export const ACTIVE_BOOKING_STATES: BookingState[] = [
+  "HOLD",
+  "PENDING_PAYMENT",
+  "CONFIRMED",
 ];
 
 export type UserRow = {
@@ -298,6 +443,11 @@ export type BookingRow = {
   amount_cents: number;
   deposit_cents: number;
   status: "confirmed" | "cancelled";
+  /** Ciclo de vida real del turno. `status` queda por compatibilidad. */
+  state: BookingState;
+  expires_at?: string | null;
+  external_reference?: string | null;
+  blocked_slot?: number;
   payment_status: "pending" | "approved" | "refunded" | "retained";
   payment_method: string | null;
   external_ref: string | null;

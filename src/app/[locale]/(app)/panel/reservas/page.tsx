@@ -39,7 +39,7 @@ export default async function BookingsPage({ params }: PageParams) {
         <ul className="mt-8 space-y-3">
           {bookings.map((booking) => {
             const court = courts.find((c) => c.id === booking.court_id);
-            const cancelled = booking.status === "cancelled";
+            const cancelled = booking.state === "CANCELLED";
             return (
               <li
                 key={booking.id}

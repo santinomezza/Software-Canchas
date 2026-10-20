@@ -77,6 +77,7 @@ export default async function PublicComplexPage({ params, searchParams }: PagePa
     start_min: b.start_min,
     duration_min: b.duration_min,
     status: b.status,
+    state: b.state,
   }));
 
   const confirmation =

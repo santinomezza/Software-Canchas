@@ -1,0 +1,61 @@
+# Docker Compose para desarrollo.
+#
+#   docker compose up -d          levanta Postgres y Redis
+#   docker compose --profile app up -d   además levanta la app
+#
+# La app por defecto usa SQLite (node:sqlite) y no necesita ningún servicio.
+# Postgres está para cuando se quiera probar el esquema con EXCLUDE USING gist
+# (ver docs/ARQUITECTURA.md) y Redis para el broker de la cola.
+
+services:
+  postgres:
+    image: postgres:17-alpine
+    restart: unless-stopped
+    environment:
+      POSTGRES_USER: cancha
+      POSTGRES_PASSWORD: cancha
+      POSTGRES_DB: cancha
+    ports:
+      - "5432:5432"
+    volumes:
+      - postgres-data:/var/lib/postgresql/data
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U cancha"]
+      interval: 5s
+      timeout: 5s
+      retries: 10
+
+  redis:
+    image: redis:7-alpine
+    restart: unless-stopped
+    command: ["redis-server", "--appendonly", "yes"]
+    ports:
+      - "6379:6379"
+    volumes:
+      - redis-data:/data
+    healthcheck:
+      test: ["CMD", "redis-cli", "ping"]
+      interval: 5s
+      timeout: 3s
+      retries: 10
+
+  app:
+    profiles: ["app"]
+    build: .
+    restart: unless-stopped
+    env_file:
+      - .env.local
+    environment:
+      DATABASE_URL: postgresql://cancha:cancha@postgres:5432/cancha
+      REDIS_URL: redis://redis:6379
+    ports:
+      - "3000:3000"
+    depends_on:
+      postgres:
+        condition: service_healthy
+      redis:
+        condition: service_healthy
+
+volumes:
+  postgres-data:
+  redis-data:
