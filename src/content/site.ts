@@ -12,7 +12,12 @@ export const siteConfig = {
   name: process.env.NEXT_PUBLIC_BRAND_NAME ?? "cancha",
   legalName: process.env.NEXT_PUBLIC_BRAND_LEGAL ?? "Cancha Software S.A.S.",
   tagline: "Software de gestión para complejos deportivos",
-  url: process.env.NEXT_PUBLIC_SITE_URL ?? "https://cancha.app",
+  /**
+   * Placeholder. En producción se define con `NEXT_PUBLIC_SITE_URL`; si no
+   * está, el canonical y el sitemap se derivan del host de la request
+   * (ver `src/lib/site-url.ts`). Nunca se hardcodea un dominio real acá.
+   */
+  url: process.env.NEXT_PUBLIC_SITE_URL ?? "http://localhost:3000",
   email: process.env.NEXT_PUBLIC_CONTACT_EMAIL ?? "hola@cancha.app",
   phone: process.env.NEXT_PUBLIC_CONTACT_PHONE ?? "+54 11 0000-0000",
   social: {

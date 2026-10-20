@@ -1,11 +1,12 @@
 import { ImageResponse } from "next/og";
-import { siteConfig } from "@/content/site";
+import { siteUrl } from "@/lib/site-url";
 
 export const alt = "cancha — software de gestión para complejos deportivos";
 export const size = { width: 1200, height: 630 };
 export const contentType = "image/png";
 
-export default function OpengraphImage() {
+export default async function OpengraphImage() {
+  const base = await siteUrl();
   return new ImageResponse(
     (
       <div
@@ -56,7 +57,7 @@ export default function OpengraphImage() {
             }}
           />
           <div style={{ fontSize: 34, color: "#E9F0ED", letterSpacing: "-0.02em" }}>
-            {siteConfig.name}
+            {process.env.NEXT_PUBLIC_BRAND_NAME ?? 'cancha'}
           </div>
         </div>
 

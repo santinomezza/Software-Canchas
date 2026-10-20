@@ -6,6 +6,7 @@ import { Toaster } from "@/components/ui/toaster";
 import { ThemeProvider, themeInitScript } from "@/components/providers/theme-provider";
 import { routing } from "@/i18n/routing";
 import { siteConfig } from "@/content/site";
+import { siteUrl } from "@/lib/site-url";
 import { fontDisplay, fontSans } from "../fonts";
 import "../globals.css";
 
@@ -30,9 +31,11 @@ export async function generateMetadata({ params }: LocaleParams): Promise<Metada
   if (!hasLocale(routing.locales, locale)) return {};
 
   const t = await getTranslations({ locale, namespace: "meta" });
+  const base = await siteUrl();
+  const canonical = locale === routing.defaultLocale ? base : `${base}/${locale}`;
 
   return {
-    metadataBase: new URL(siteConfig.url),
+    metadataBase: new URL(base),
     title: { absolute: t("title") },
     description: t("description"),
     applicationName: siteConfig.name,
@@ -47,20 +50,20 @@ export async function generateMetadata({ params }: LocaleParams): Promise<Metada
     authors: [{ name: siteConfig.legalName }],
     creator: siteConfig.legalName,
     alternates: {
-      canonical:
-        locale === routing.defaultLocale ? siteConfig.url : `${siteConfig.url}/${locale}`,
+      canonical,
       languages: {
-        "es-AR": siteConfig.url,
-        "es-MX": `${siteConfig.url}/es-MX`,
-        "es-CL": `${siteConfig.url}/es-CL`,
-        "es-CO": `${siteConfig.url}/es-CO`,
-        "pt-BR": `${siteConfig.url}/pt-BR`,
-        "x-default": siteConfig.url,
-      },    },
+        "es-AR": base,
+        "es-MX": `${base}/es-MX`,
+        "es-CL": `${base}/es-CL`,
+        "es-CO": `${base}/es-CO`,
+        "pt-BR": `${base}/pt-BR`,
+        "x-default": base,
+      },
+    },
     openGraph: {
       type: "website",
       locale: locale.replace("-", "_"),
-      url: locale === routing.defaultLocale ? siteConfig.url : `${siteConfig.url}/${locale}`,
+      url: canonical,
       siteName: siteConfig.name,
       title: t("ogTitle"),
       description: t("ogDescription"),
