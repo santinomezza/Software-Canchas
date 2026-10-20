@@ -12,6 +12,12 @@ const eslintConfig = defineConfig([
     "out/**",
     "build/**",
     "next-env.d.ts",
+    // Datos locales y artefactos:
+    "data/**",
+    ".tools/**",
+    "qa/**",
+    // Clon anidado del repo (no versionado):
+    "Software-Canchas/**",
   ]),
 ]);
 

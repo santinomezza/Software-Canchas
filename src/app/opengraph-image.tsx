@@ -1,12 +1,10 @@
 import { ImageResponse } from "next/og";
-import { siteUrl } from "@/lib/site-url";
 
 export const alt = "cancha — software de gestión para complejos deportivos";
 export const size = { width: 1200, height: 630 };
 export const contentType = "image/png";
 
 export default async function OpengraphImage() {
-  const base = await siteUrl();
   return new ImageResponse(
     (
       <div
