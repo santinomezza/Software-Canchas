@@ -188,12 +188,12 @@ export function AgendaBoard({
       </div>
 
       {/* Grid */}
-      <div className="mt-5 overflow-x-auto pb-2">
-        <div className="min-w-[46rem]">
+      <div className="mt-5 max-h-[calc(100vh-18rem)] min-h-[24rem] overflow-auto pb-2">
+        <div className="w-max min-w-full">
           {/* Court headers */}
           <div
-            className="grid gap-2"
-            style={{ gridTemplateColumns: `4rem repeat(${visibleCourts.length}, minmax(9rem, 1fr))` }}
+            className="sticky top-0 z-20 grid gap-2 bg-[var(--bg-base)]/95 pb-2 backdrop-blur-sm"
+            style={{ gridTemplateColumns: `4rem repeat(${visibleCourts.length}, minmax(9rem, 15rem))` }}
           >
             <span />
             {visibleCourts.map((court, index) => (
@@ -221,7 +221,7 @@ export function AgendaBoard({
           {/* Body */}
           <div
             className="relative mt-1 grid gap-2"
-            style={{ gridTemplateColumns: `4rem repeat(${visibleCourts.length}, minmax(9rem, 1fr))` }}
+            style={{ gridTemplateColumns: `4rem repeat(${visibleCourts.length}, minmax(9rem, 15rem))` }}
           >
             {/* Time gutter */}
             <div className="relative" style={{ height: gridHeight }}>
