@@ -68,6 +68,9 @@ export default async function PublicComplexPage({ params, searchParams }: PagePa
   const images = listImages(complex.id);
   const services = listEnabledServices(complex.id);
   const today = todayIn(complex.timezone);
+  // Un solo instante de referencia para el servidor y el cliente: si no, la
+  // lista de horarios puede diferir y romper la hidratacion.
+  const now = new Date();
 
   const dates = Array.from({ length: 14 }, (_, i) => addDays(today, i));
   const bookings = listBookingsInRange(complex.id, today, dates[dates.length - 1]).map((b) => ({
@@ -217,6 +220,7 @@ export default async function PublicComplexPage({ params, searchParams }: PagePa
             today={today}
             dates={dates}
             locale={locale}
+            nowISO={now.toISOString()}
           />
         </section>
 

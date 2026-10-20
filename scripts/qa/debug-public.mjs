@@ -2,7 +2,10 @@ import { chromium } from "@playwright/test";
 
 const url = process.argv[2];
 const browser = await chromium.launch();
-const page = await browser.newPage({ viewport: { width: 1440, height: 1000 } });
+const page = await browser.newPage({
+    viewport: { width: 1440, height: 1000 },
+    timezoneId: "America/Argentina/Buenos_Aires",
+  });
 
 page.on("pageerror", (e) => console.log("[pageerror]", String(e).slice(0, 500)));
 page.on("console", (m) => {

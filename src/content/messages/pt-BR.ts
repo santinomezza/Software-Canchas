@@ -665,6 +665,9 @@ const messages: Messages = {
     noSlotsShort: "Sem horários",
     occupied: "Ocupado",
     noSlots: "Esse dia não tem horários disponíveis. Tente outra data.",
+    noCourtsForDate:
+      "Nenhuma quadra tem horários livres para essa data. Tente outro dia.",
+    noSlotsSelected: "Não há horários livres nessa quadra para a data escolhida.",
     summaryTitle: "Sua reserva",
     summaryEmpty: "Escolha uma quadra e um horário para ver o detalhe da sua reserva.",
     cancha: "Quadra",

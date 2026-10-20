@@ -80,6 +80,28 @@ export type SlotBooking = {
 
 export type SlotHour = { weekday: number; opens_min: number; closes_min: number };
 
+/**
+ * Minutos desde medianoche de un instante, en la zona horaria indicada.
+ *
+ * Importante: el corte de "horarios pasados" tiene que calcularse en la
+ * hora **del complejo**, no en la del proceso. Con un servidor en UTC, un
+ * complejo de Argentina vería mal los horarios de la tarde.
+ */
+export function minutesInTimezone(date: Date, timezone: string): number {
+  const parts = new Intl.DateTimeFormat("en-GB", {
+    timeZone: timezone,
+    hour: "2-digit",
+    minute: "2-digit",
+    hour12: false,
+  }).formatToParts(date);
+
+  const hour = Number(parts.find((p) => p.type === "hour")?.value ?? "0");
+  const minute = Number(parts.find((p) => p.type === "minute")?.value ?? "0");
+
+  // "24" aparece en algunos runtimes para la medianoche.
+  return (hour % 24) * 60 + minute;
+}
+
 export function buildSlots(input: {
   complex: SlotComplex;
   court: SlotCourt;
@@ -98,8 +120,9 @@ export function buildSlots(input: {
   const slots: Slot[] = [];
 
   const timezone = complex.timezone ?? "America/Argentina/Buenos_Aires";
-  const isToday = date === todayIn(timezone, now ?? new Date());
-  const nowMin = isToday && now ? now.getHours() * 60 + now.getMinutes() : -1;
+  const reference = now ?? new Date();
+  const isToday = date === todayIn(timezone, reference);
+  const nowMin = isToday ? minutesInTimezone(reference, timezone) : -1;
 
   for (
     let start = opening.opens_min;

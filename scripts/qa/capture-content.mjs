@@ -15,7 +15,10 @@ const stamp = Date.now();
 const owner = `demo${stamp}@test.com`;
 
 const browser = await chromium.launch();
-const context = await browser.newContext({ viewport: { width: 1440, height: 1000 } });
+const context = await browser.newContext({
+    viewport: { width: 1440, height: 1000 },
+    timezoneId: "America/Argentina/Buenos_Aires",
+  });
 const page = await context.newPage();
 
 const errors = [];

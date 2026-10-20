@@ -715,7 +715,9 @@
     "openInMaps": "Abrir en Google Maps",
     "cancelledTitle": "Turno cancelado",
     "cancelledBody": "El complejo canceló este turno.",
-    "occupied": "Ocupado"
+    "occupied": "Ocupado",
+    "noCourtsForDate": "Ninguna cancha tiene horarios libres para esa fecha. Probá con otro día.",
+    "noSlotsSelected": "No hay horarios libres en esa cancha para la fecha elegida."
   },
   "content": {
     "contentTitle": "Contenido del complejo",

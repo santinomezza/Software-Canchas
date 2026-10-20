@@ -18,7 +18,10 @@ const employee = `encargado${stamp}@test.com`;
 const password = "claveSegura123";
 
 const browser = await chromium.launch();
-const context = await browser.newContext({ viewport: { width: 1600, height: 1000 } });
+const context = await browser.newContext({
+    viewport: { width: 1600, height: 1000 },
+    timezoneId: "America/Argentina/Buenos_Aires",
+  });
 const page = await context.newPage();
 
 const errors = [];
@@ -127,7 +130,10 @@ await step("employee is added with a temporary password", async () => {
 });
 
 await step("employee signs in and sees a read-only agenda", async () => {
-  const employeeContext = await browser.newContext({ viewport: { width: 1440, height: 1000 } });
+  const employeeContext = await browser.newContext({
+    viewport: { width: 1440, height: 1000 },
+    timezoneId: "America/Argentina/Buenos_Aires",
+  });
   const employeePage = await employeeContext.newPage();
 
   await employeePage.goto(`${base}/acceder`, { waitUntil: "networkidle" });

@@ -79,6 +79,7 @@ export function PublicBooking({
   today,
   dates,
   locale,
+  nowISO,
 }: {
   complex: PublicComplex;
   courts: PublicCourt[];
@@ -87,6 +88,8 @@ export function PublicBooking({
   today: string;
   dates: string[];
   locale: string;
+  /** Instante de referencia: el mismo en el servidor y en el cliente. */
+  nowISO: string;
 }) {
   const t = useTranslations("public");
 
@@ -108,9 +111,29 @@ export function PublicBooking({
       date,
       hours,
       bookings: bookings.filter((b) => isActiveState(b.state)),
+      now: new Date(nowISO),
     });
-  }, [court, complex, date, hours, bookings]);
+  }, [court, complex, date, hours, bookings, nowISO]);
+
   const freeSlots = slots.filter((slot) => slot.available);
+
+  /** Disponibilidad de una cancha para la fecha elegida. */
+  const freeSlotsForCourt = React.useCallback(
+    (item: PublicCourt) =>
+      buildSlots({
+        complex: {
+          slot_minutes: complex.slotMinutes,
+          refund_window_hours: complex.refundWindowHours,
+          timezone: complex.timezone,
+        },
+        court: { id: item.id, duration_min: item.durationMin },
+        date,
+        hours,
+        bookings: bookings.filter((b) => isActiveState(b.state)),
+        now: new Date(nowISO),
+      }).filter((slot) => slot.available),
+    [complex, date, hours, bookings, nowISO],
+  );
 
   const groups = React.useMemo(() => {
     const morning = slots.filter((s) => s.startMin < 12 * 60);
@@ -126,9 +149,18 @@ export function PublicBooking({
   const money = (cents: number) => formatMoney(cents, complex.currency, locale);
   const depositCents = court ? depositFor(court.priceCents, court.depositPct) : 0;
 
-  const weekdayFormatter = new Intl.DateTimeFormat(locale, { weekday: "short" });
-  const dayFormatter = new Intl.DateTimeFormat(locale, { day: "numeric" });
-  const monthFormatter = new Intl.DateTimeFormat(locale, { month: "short" });
+  const weekdayFormatter = new Intl.DateTimeFormat(locale, {
+    weekday: "short",
+    timeZone: "UTC",
+  });
+  const dayFormatter = new Intl.DateTimeFormat(locale, {
+    day: "numeric",
+    timeZone: "UTC",
+  });
+  const monthFormatter = new Intl.DateTimeFormat(locale, {
+    month: "short",
+    timeZone: "UTC",
+  });
 
   return (
     <div className="grid gap-10 lg:grid-cols-12 lg:gap-12">
@@ -190,17 +222,37 @@ export function PublicBooking({
             {courts.map((item) => {
               const Icon = SPORT_ICON[item.sport] ?? Volleyball;
               const active = item.id === courtId;
-              const available = buildSlots({
-                complex: {
-                  slot_minutes: complex.slotMinutes,
-                  refund_window_hours: complex.refundWindowHours,
-                  timezone: complex.timezone,
-                },
-                court: { id: item.id, duration_min: item.durationMin },
-                date,
-                hours,
-                bookings: bookings.filter((b) => isActiveState(b.state)),
-              }).filter((slot) => slot.available).length;
+              const available = freeSlotsForCourt(item).length;
+
+              // Una cancha sin horarios no se puede elegir: se muestra el
+              // estado, no un botón que no lleva a ningún lado.
+              if (available === 0) {
+                return (
+                  <li key={item.id}>
+                    <div className="flex w-full items-center gap-4 rounded-[var(--radius-lg)] border border-line/60 bg-surface-1/40 px-5 py-4 opacity-70">
+                      <span className="grid size-11 shrink-0 place-items-center rounded-[var(--radius-sm)] border border-line bg-surface-2 text-ink-3">
+                        <Icon className="size-5" />
+                      </span>
+                      <span className="min-w-0 flex-1">
+                        <span className="flex items-center gap-2">
+                          <span className="truncate font-display text-lg tracking-tight text-ink-2">
+                            {item.name}
+                          </span>
+                          <span className="shrink-0 rounded-full border border-line bg-surface-2 px-2 py-0.5 text-[0.625rem] uppercase tracking-[0.08em] text-ink-3">
+                            {SPORT_LABEL[item.sport] ?? item.sport}
+                          </span>
+                        </span>
+                        <span className="mt-0.5 block text-xs text-ink-3">
+                          {item.durationMin} {t("minutes")} · {item.depositPct}% {t("deposit")}
+                        </span>
+                      </span>
+                      <span className="shrink-0 text-right text-xs text-ink-3">
+                        {t("noSlotsShort")}
+                      </span>
+                    </div>
+                  </li>
+                );
+              }
 
               return (
                 <li key={item.id}>
@@ -223,7 +275,7 @@ export function PublicBooking({
                       className={cn(
                         "grid size-11 shrink-0 place-items-center rounded-[var(--radius-sm)] border transition-colors",
                         active
-                          ? "border-accent/40 bg-accent/15 text-accent"
+                          ? "border-accent/40 bg-accent/12 text-accent"
                           : "border-line bg-surface-2 text-ink-2",
                       )}
                     >
@@ -248,15 +300,8 @@ export function PublicBooking({
                       <span className="block font-display text-lg text-ink">
                         {money(item.priceCents)}
                       </span>
-                      <span
-                        className={cn(
-                          "mt-0.5 block text-[0.6875rem]",
-                          available > 0 ? "text-accent" : "text-ink-3",
-                        )}
-                      >
-                        {available > 0
-                          ? t("availableSlots", { count: available })
-                          : t("noSlotsShort")}
+                      <span className="mt-0.5 block text-[0.6875rem] text-accent">
+                        {t("availableSlots", { count: available })}
                       </span>
                     </span>
 
@@ -272,6 +317,12 @@ export function PublicBooking({
               );
             })}
           </ul>
+
+          {courts.every((item) => freeSlotsForCourt(item).length === 0) ? (
+            <p className="mt-4 rounded-[var(--radius-md)] border border-line bg-surface-1 px-4 py-3 text-sm text-ink-2">
+              {t("noCourtsForDate")}
+            </p>
+          ) : null}
         </section>
 
         {/* Step 3 · time */}
@@ -388,6 +439,7 @@ function BookingSummary({
     weekday: "long",
     day: "numeric",
     month: "long",
+    timeZone: "UTC",
   }).format(new Date(`${date}T12:00:00Z`));
 
   return (

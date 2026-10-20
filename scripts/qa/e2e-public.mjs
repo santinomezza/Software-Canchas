@@ -2,7 +2,10 @@ import { chromium } from "@playwright/test";
 
 const url = process.argv[2];
 const browser = await chromium.launch();
-const page = await browser.newPage({ viewport: { width: 1440, height: 1000 } });
+const page = await browser.newPage({
+    viewport: { width: 1440, height: 1000 },
+    timezoneId: "America/Argentina/Buenos_Aires",
+  });
 
 const errors = [];
 page.on("pageerror", (e) => errors.push(String(e).slice(0, 200)));
@@ -18,7 +21,8 @@ page.on("console", (m) => {
 await page.goto(url, { waitUntil: "networkidle" });
 
 // 1. Cancha
-await page.getByRole("button", { name: /BOMBONERA|CILINDRO/ }).first().click();
+// Se elige la cancha con disponibilidad: una sin horarios no es clickeable.
+await page.locator("button", { hasText: /\d+ horarios/ }).first().click();
 await page.waitForTimeout(600);
 
 // 2. Horario

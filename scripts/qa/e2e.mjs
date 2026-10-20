@@ -15,7 +15,10 @@ const email = `dueno${Date.now()}@test.com`;
 const password = "claveSegura123";
 
 const browser = await chromium.launch();
-const context = await browser.newContext({ viewport: { width: 1440, height: 1000 } });
+const context = await browser.newContext({
+    viewport: { width: 1440, height: 1000 },
+    timezoneId: "America/Argentina/Buenos_Aires",
+  });
 const page = await context.newPage();
 
 const errors = [];
@@ -91,7 +94,16 @@ await step("public page shows the complex and its court", async () => {
 });
 
 await step("booking is created from the public page", async () => {
-  // The new flow: pick a court, pick a slot, fill the form.
+  // The new flow: pick a day with availability, a court, a slot and the form.
+  // Se elige el primer día con horarios: a la tarde el día actual ya no
+  // tiene nada disponible y el test no dependería de la hora.
+  // Se elige el segundo día (mañana): así el test no depende de la hora.
+  const dateSection = page
+    .locator("section")
+    .filter({ has: page.getByRole("heading", { name: "Elegí la fecha" }) });
+  await dateSection.getByRole("button").nth(1).click();
+  await page.waitForTimeout(400);
+
   await page.getByRole("button", { name: /Pádel Norte/ }).first().click();
   await page.waitForTimeout(400);
 
@@ -119,6 +131,11 @@ await step("double booking the same slot is rejected", async () => {
   await page.goto(`${base}${link}`, { waitUntil: "networkidle" });
 
   // The slot taken by the previous booking must not be offered.
+  const dateSection = page
+    .locator("section")
+    .filter({ has: page.getByRole("heading", { name: "Elegí la fecha" }) });
+  await dateSection.getByRole("button").nth(1).click();
+  await page.waitForTimeout(400);
   await page.getByRole("button", { name: /Pádel Norte/ }).first().click();
   await page.waitForTimeout(400);
   const taken = await page.locator("span.line-through").count();
