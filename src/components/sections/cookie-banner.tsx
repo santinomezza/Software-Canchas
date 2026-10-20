@@ -15,7 +15,10 @@ export function CookieBanner() {
     try {
       if (!localStorage.getItem(CONSENT_KEY)) {
         // Let the page settle before asking.
-        const timer = window.setTimeout(() => setVisible(true), 900);
+        const timer = window.setTimeout(() => {
+          setVisible(true);
+          document.documentElement.setAttribute("data-cookie-banner", "open");
+        }, 900);
         return () => window.clearTimeout(timer);
       }
     } catch {
@@ -25,6 +28,7 @@ export function CookieBanner() {
 
   function decide(value: "accepted" | "essential") {
     setAnalyticsConsent(value);
+    document.documentElement.removeAttribute("data-cookie-banner");
     setVisible(false);
   }
 

@@ -1,9 +1,54 @@
 "use client";
 
-import { motion, useReducedMotion, type Variants } from "framer-motion";
 import * as React from "react";
 
-const EASE = [0.22, 1, 0.36, 1] as const;
+/**
+ * Reveal-on-scroll.
+ *
+ * Implemented with IntersectionObserver + CSS transitions instead of a
+ * motion library so that:
+ *  - users who prefer reduced motion always see the content (CSS override),
+ *  - users without JavaScript see the content (no-JS stylesheet),
+ *  - the initial paint never depends on hydration.
+ */
+export function useReveal<T extends HTMLElement = HTMLElement>(options?: {
+  threshold?: number;
+  rootMargin?: string;
+}) {
+  const ref = React.useRef<T>(null);
+  const [revealed, setRevealed] = React.useState(false);
+
+  React.useEffect(() => {
+    const element = ref.current;
+    if (!element) return;
+
+    if (typeof IntersectionObserver === "undefined") {
+      setRevealed(true);
+      return;
+    }
+
+    const observer = new IntersectionObserver(
+      (entries) => {
+        for (const entry of entries) {
+          if (entry.isIntersecting) {
+            setRevealed(true);
+            observer.disconnect();
+          }
+        }
+      },
+      {
+        threshold: options?.threshold ?? 0.12,
+        rootMargin: options?.rootMargin ?? "0px 0px -6% 0px",
+      },
+    );
+
+    observer.observe(element);
+    return () => observer.disconnect();
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, []);
+
+  return { ref, revealed };
+}
 
 export type RevealProps = {
   children: React.ReactNode;
@@ -12,96 +57,76 @@ export type RevealProps = {
   delay?: number;
   /** Travel distance in px. */
   distance?: number;
-  as?: "div" | "section" | "li" | "article" | "header" | "footer";
+  as?: "div" | "section" | "li" | "article" | "header" | "footer" | "ul" | "ol";
 };
 
 /**
  * Fade + translate entrance that triggers once the element enters the
- * viewport. Fully disabled when the user prefers reduced motion.
+ * viewport. Fully neutralised under `prefers-reduced-motion`.
  */
 export function Reveal({
   children,
   className,
   delay = 0,
   distance = 18,
-  as = "div",
+  as: Tag = "div",
 }: RevealProps) {
-  const reduce = useReducedMotion();
-  const Component = motion[as];
+  const { ref, revealed } = useReveal<HTMLElement>();
 
   return (
-    <Component
+    <Tag
+      ref={ref as React.Ref<never>}
+      data-reveal=""
+      data-revealed={revealed ? "true" : undefined}
       className={className}
-      initial={reduce ? { opacity: 0 } : { opacity: 0, y: distance }}
-      whileInView={{ opacity: 1, y: 0 }}
-      viewport={{ once: true, margin: "-10% 0px -10% 0px" }}
-      transition={{ duration: 0.55, delay, ease: EASE }}
+      style={
+        {
+          "--reveal-delay": `${delay}s`,
+          "--reveal-distance": `${distance}px`,
+        } as React.CSSProperties
+      }
     >
       {children}
-    </Component>
+    </Tag>
   );
 }
 
-const staggerParent: Variants = {
-  hidden: {},
-  visible: { transition: { staggerChildren: 0.08, delayChildren: 0.05 } },
+export type StaggerItemProps = {
+  children: React.ReactNode;
+  className?: string;
+  index?: number;
+  as?: "div" | "li";
 };
 
-const staggerChild: Variants = {
-  hidden: { opacity: 0, y: 20 },
-  visible: { opacity: 1, y: 0, transition: { duration: 0.5, ease: EASE } },
-};
+/**
+ * A single item of a staggered list. Each item reveals on its own, so the
+ * effect degrades gracefully on long lists.
+ */
+export function StaggerItem({
+  children,
+  className,
+  index = 0,
+  as: Tag = "div",
+}: StaggerItemProps) {
+  return (
+    <Reveal className={className} delay={index * 0.08} distance={20} as={Tag}>
+      {children}
+    </Reveal>
+  );
+}
 
+/**
+ * Container for staggered items. Kept as a plain element: the staggering
+ * lives on the items themselves.
+ */
 export function Stagger({
   children,
   className,
-  as = "div",
+  as: Tag = "div",
 }: {
   children: React.ReactNode;
   className?: string;
   as?: "div" | "ul" | "ol";
 }) {
-  const reduce = useReducedMotion();
-  const Component = motion[as];
-
-  if (reduce) {
-    const Static = as;
-    return <Static className={className}>{children}</Static>;
-  }
-
-  return (
-    <Component
-      className={className}
-      variants={staggerParent}
-      initial="hidden"
-      whileInView="visible"
-      viewport={{ once: true, margin: "-10% 0px -10% 0px" }}
-    >
-      {children}
-    </Component>
-  );
-}
-
-export function StaggerItem({
-  children,
-  className,
-  as = "div",
-}: {
-  children: React.ReactNode;
-  className?: string;
-  as?: "div" | "li";
-}) {
-  const reduce = useReducedMotion();
-  const Component = motion[as];
-
-  if (reduce) {
-    const Static = as;
-    return <Static className={className}>{children}</Static>;
-  }
-
-  return (
-    <Component className={className} variants={staggerChild}>
-      {children}
-    </Component>
-  );
+  return <Tag className={className}>{children}</Tag>;
 }

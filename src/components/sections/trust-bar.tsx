@@ -46,11 +46,11 @@ export async function TrustBar() {
               {countries.map((country) => (
                 <li
                   key={country.code}
-                  className="rounded-full border border-line px-2.5 py-1 text-xs text-ink-3"
+                  className="rounded-full border border-line px-2.5 py-1 text-[0.6875rem] font-medium tracking-[0.06em] text-ink-3"
                   title={country.name}
                 >
-                  <span aria-hidden>{country.flag}</span>
-                  <span className="sr-only">{country.name}</span>
+                  {country.code}
+                  <span className="sr-only"> — {country.name}</span>
                 </li>
               ))}
             </ul>

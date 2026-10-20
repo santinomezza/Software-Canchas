@@ -52,13 +52,13 @@ export function CountrySelect({ className, compact = false }: { className?: stri
         }
       >
         <Globe className="size-4 shrink-0" strokeWidth={1.5} aria-hidden />
-        <SelectValue>{compact ? active.flag : `${active.flag} ${active.name}`}</SelectValue>
+        <SelectValue>{compact ? active.code : `${active.code} · ${active.name}`}</SelectValue>
       </SelectTrigger>
       <SelectContent>
         {countries.map((country) => (
           <SelectItem key={country.code} value={country.code}>
-            <span aria-hidden className="text-base">
-              {country.flag}
+            <span className="w-6 shrink-0 text-xs font-medium tracking-[0.06em] text-ink-3">
+              {country.code}
             </span>
             {country.name}
           </SelectItem>

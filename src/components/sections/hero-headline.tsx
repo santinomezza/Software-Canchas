@@ -20,7 +20,7 @@ export function HeroHeadline({ variant = "a" }: { variant?: "a" | "b" }) {
   const render = (key: "h1A" | "h1B") => (
     <span
       className={cn(
-        "absolute inset-x-0 top-0 transition-opacity duration-300",
+        "col-start-1 row-start-1 transition-opacity duration-300",
         active === (key === "h1A" ? "a" : "b") ? "opacity-100" : "pointer-events-none opacity-0",
       )}
       aria-hidden={active !== (key === "h1A" ? "a" : "b")}
@@ -30,7 +30,7 @@ export function HeroHeadline({ variant = "a" }: { variant?: "a" | "b" }) {
   );
 
   return (
-    <h1 className="relative min-h-[2.2em] font-display text-4xl leading-[1.02] tracking-[-0.035em] text-ink sm:min-h-[2.12em] lg:min-h-[1.06em]">
+    <h1 className="relative grid font-display text-4xl leading-[1.02] tracking-[-0.035em] text-ink sm:min-h-[2.12em] lg:min-h-[1.06em]">
       {render("h1A")}
       {render("h1B")}
     </h1>

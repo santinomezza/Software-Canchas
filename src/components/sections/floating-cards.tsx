@@ -52,7 +52,7 @@ export function FloatingCards() {
         {...floatDelay}
         className={cn(
           "absolute -left-2 bottom-4 z-20 hidden rounded-[var(--radius-md)] border border-line-strong",
-          "bg-surface-1/95 p-3 shadow-[var(--shadow-lg)] backdrop-blur-xl sm:block lg:-left-8 lg:bottom-10",
+          "bg-surface-1/95 p-3 shadow-[var(--shadow-lg)] backdrop-blur-xl sm:block lg:-left-10 lg:-bottom-7",
         )}
       >
         <div className="flex items-center gap-2.5">

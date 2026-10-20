@@ -1,15 +1,16 @@
-import { getTranslations, setRequestLocale } from "next-intl/server";
+"use client";
+
+import { useTranslations } from "next-intl";
 import { Button } from "@/components/ui/button";
 import { Container } from "@/components/layout/section";
 
-type PageParams = { params: Promise<{ locale: string }> };
-
-export default async function NotFound({ params }: PageParams) {
-  const { locale } = await params;
-  setRequestLocale(locale);
-
-  const t = await getTranslations("common");
-  const tNav = await getTranslations("nav");
+/**
+ * Localized 404. It is a client component because Next renders `not-found`
+ * without the route params, so the locale cannot be resolved on the server.
+ */
+export default function NotFound() {
+  const t = useTranslations("common");
+  const tNav = useTranslations("nav");
 
   return (
     <Container className="flex min-h-[70vh] flex-col items-center justify-center py-32 text-center">

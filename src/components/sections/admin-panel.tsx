@@ -28,8 +28,8 @@ export async function AdminPanel() {
           </Reveal>
 
           <Stagger className="mt-10 space-y-5">
-            {FEATURES.map((feature) => (
-              <StaggerItem key={feature.key}>
+            {FEATURES.map((feature, index) => (
+              <StaggerItem key={feature.key} index={index}>
                 <div className="flex items-start gap-4 rounded-[var(--radius-lg)] border border-line bg-surface-1 p-5">
                   <span className="grid size-10 shrink-0 place-items-center rounded-[var(--radius-sm)] border border-accent/25 bg-accent/10">
                     <feature.Icon className="size-4 text-accent" strokeWidth={1.6} aria-hidden />

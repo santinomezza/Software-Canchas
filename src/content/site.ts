@@ -32,25 +32,24 @@ export type Country = {
   name: string;
   locale: Locale;
   currency: string;
-  flag: string;
 };
 
 /** Markets served. The selector in the footer switches the active locale. */
 export const countries: Country[] = [
-  { code: "AR", name: "Argentina", locale: "es-AR", currency: "ARS", flag: "🇦🇷" },
-  { code: "MX", name: "México", locale: "es-MX", currency: "MXN", flag: "🇲🇽" },
-  { code: "PE", name: "Perú", locale: "es-AR", currency: "PEN", flag: "🇵🇪" },
-  { code: "CL", name: "Chile", locale: "es-CL", currency: "CLP", flag: "🇨🇱" },
-  { code: "HN", name: "Honduras", locale: "es-AR", currency: "HNL", flag: "🇭🇳" },
-  { code: "US", name: "Estados Unidos", locale: "es-AR", currency: "USD", flag: "🇺🇸" },
-  { code: "PA", name: "Panamá", locale: "es-AR", currency: "PAB", flag: "🇵🇦" },
-  { code: "UY", name: "Uruguay", locale: "es-AR", currency: "UYU", flag: "🇺🇾" },
-  { code: "CO", name: "Colombia", locale: "es-CO", currency: "COP", flag: "🇨🇴" },
-  { code: "EC", name: "Ecuador", locale: "es-AR", currency: "USD", flag: "🇪🇨" },
-  { code: "PY", name: "Paraguay", locale: "es-AR", currency: "PYG", flag: "🇵🇾" },
-  { code: "VE", name: "Venezuela", locale: "es-AR", currency: "VES", flag: "🇻🇪" },
-  { code: "GT", name: "Guatemala", locale: "es-AR", currency: "GTQ", flag: "🇬🇹" },
-  { code: "CR", name: "Costa Rica", locale: "es-AR", currency: "CRC", flag: "🇨🇷" },
+  { code: "AR", name: "Argentina", locale: "es-AR", currency: "ARS" },
+  { code: "MX", name: "México", locale: "es-MX", currency: "MXN" },
+  { code: "PE", name: "Perú", locale: "es-AR", currency: "PEN" },
+  { code: "CL", name: "Chile", locale: "es-CL", currency: "CLP" },
+  { code: "HN", name: "Honduras", locale: "es-AR", currency: "HNL" },
+  { code: "US", name: "Estados Unidos", locale: "es-AR", currency: "USD" },
+  { code: "PA", name: "Panamá", locale: "es-AR", currency: "PAB" },
+  { code: "UY", name: "Uruguay", locale: "es-AR", currency: "UYU" },
+  { code: "CO", name: "Colombia", locale: "es-CO", currency: "COP" },
+  { code: "EC", name: "Ecuador", locale: "es-AR", currency: "USD" },
+  { code: "PY", name: "Paraguay", locale: "es-AR", currency: "PYG" },
+  { code: "VE", name: "Venezuela", locale: "es-AR", currency: "VES" },
+  { code: "GT", name: "Guatemala", locale: "es-AR", currency: "GTQ" },
+  { code: "CR", name: "Costa Rica", locale: "es-AR", currency: "CRC" },
 ];
 
 export const navSections = [

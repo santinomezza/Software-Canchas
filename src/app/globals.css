@@ -343,6 +343,40 @@
   border-width: 0;
 }
 
+/* The sticky CTA yields to the cookie banner so the two never collide. */
+html[data-cookie-banner="open"] [data-sticky-cta] {
+  display: none;
+}
+
+/* ==========================================================================
+   REVEAL — fade/translate on scroll
+   CSS-driven so that reduced-motion and no-JS users always see the content.
+   ========================================================================== */
+
+[data-reveal] {
+  opacity: 0;
+  transform: translate3d(0, var(--reveal-distance, 18px), 0);
+  transition:
+    opacity 0.55s var(--ease-premium) var(--reveal-delay, 0s),
+    transform 0.55s var(--ease-premium) var(--reveal-delay, 0s);
+}
+
+[data-reveal]:not([data-revealed="true"]) {
+  will-change: opacity, transform;
+}
+
+[data-reveal][data-revealed="true"] {
+  opacity: 1;
+  transform: none;
+}
+
+@media (prefers-reduced-motion: reduce) {
+  [data-reveal] {
+    opacity: 1 !important;
+    transform: none !important;
+  }
+}
+
 /* ==========================================================================
    KEYFRAMES
    ========================================================================== */

@@ -113,6 +113,9 @@ export default async function LocaleLayout({ children, params }: LocaleParams & 
     >
       <head>
         <script dangerouslySetInnerHTML={{ __html: themeInitScript }} />
+        <noscript>
+          <style>{`[data-reveal]{opacity:1 !important;transform:none !important}`}</style>
+        </noscript>
       </head>
       <body className="min-h-screen bg-base text-ink">
         <NextIntlClientProvider>

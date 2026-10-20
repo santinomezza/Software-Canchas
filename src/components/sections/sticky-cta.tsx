@@ -48,8 +48,13 @@ export function StickyCta() {
           transition={{ duration: 0.32, ease: [0.22, 1, 0.36, 1] }}
           className="fixed inset-x-0 bottom-0 z-40 px-4 pb-4 sm:inset-x-auto sm:bottom-6 sm:right-6 sm:px-0 sm:pb-0"
         >
-          <div className="glass-strong flex items-center gap-4 rounded-full p-1.5 pl-5 shadow-[var(--shadow-xl)]">
-            <span className="hidden text-sm font-medium text-ink sm:block">{t("ctaPrimary")}</span>
+          <div
+            data-sticky-cta
+            className="glass-strong flex items-center gap-3 rounded-full p-1.5 pl-5 shadow-[var(--shadow-xl)]"
+          >
+            <span className="hidden text-sm font-medium text-ink md:block">
+              {t("scrollHint")}
+            </span>
             <Button
               size="md"
               onClick={() => track({ name: "cta_click", props: { placement: "sticky" } })}

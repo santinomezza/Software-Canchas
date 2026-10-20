@@ -40,7 +40,6 @@ export function CancellationPolicy() {
         body: t("retainBody"),
       };
 
-  const percent = (hours / MAX_HOURS) * 100;
 
   return (
     <div className="rounded-[var(--radius-xl)] border border-line bg-surface-1 p-6 shadow-[var(--shadow-lg)] sm:p-8">
@@ -49,7 +48,7 @@ export function CancellationPolicy() {
           <p className="text-xs font-medium uppercase tracking-[0.14em] text-ink-3">
             {t("sliderLabel")}
           </p>
-          <p className="mt-2 font-display text-3xl tracking-tight text-ink">
+          <p className="mt-2 font-display text-2xl tracking-tight text-ink sm:text-[1.75rem]">
             {t("sliderNow")}{" "}
             <span className="text-accent">
               {t("sliderNowValue", { hours: hours })}
@@ -115,23 +114,6 @@ export function CancellationPolicy() {
           </div>
         </motion.div>
       </AnimatePresence>
-
-      {/* Visual gauge */}
-      <div className="mt-6">
-        <div className="relative h-2 overflow-hidden rounded-full bg-line">
-          <div
-            className={cn(
-              "absolute inset-y-0 left-0 transition-[width,background-color] duration-200",
-              refunded ? "bg-accent" : "bg-gold",
-            )}
-            style={{ width: `${percent}%` }}
-          />
-          <span
-            aria-hidden
-            className="absolute inset-y-0 left-1/2 w-px bg-ink/25"
-          />
-        </div>
-      </div>
     </div>
   );
 }

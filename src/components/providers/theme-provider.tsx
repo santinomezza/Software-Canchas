@@ -17,8 +17,11 @@ export const THEME_STORAGE_KEY = "cancha-theme";
 /**
  * Runs before paint to avoid a flash of the wrong theme.
  * Kept inline and tiny on purpose.
+ *
+ * The dark theme is the product's default identity, so the system preference
+ * is ignored unless the visitor explicitly chose a theme before.
  */
-export const themeInitScript = `(function(){try{var s=localStorage.getItem("${THEME_STORAGE_KEY}");var t=s==="light"||s==="dark"?s:(window.matchMedia("(prefers-color-scheme: light)").matches?"light":"dark");document.documentElement.setAttribute("data-theme",t);}catch(e){document.documentElement.setAttribute("data-theme","dark");}})();`;
+export const themeInitScript = `(function(){try{var s=localStorage.getItem("${THEME_STORAGE_KEY}");var t=s==="light"||s==="dark"?s:"dark";document.documentElement.setAttribute("data-theme",t);}catch(e){document.documentElement.setAttribute("data-theme","dark");}})();`;
 
 export function ThemeProvider({ children }: { children: React.ReactNode }) {
   const [theme, setThemeState] = React.useState<Theme>("dark");
